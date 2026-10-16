@@ -50,17 +50,28 @@ Built adhering strictly to the design aesthetics in `DESIGN-airtable.md` (clean 
 
 ---
 
-## Deployment to Vercel
+## Deployment to GitHub & Vercel
 
-The application is static, lightweight, and zero-dependency.
-
-### Method 1: Using Vercel CLI
+### Step 1: Push to your GitHub Repository
+If you haven't already created a repository on GitHub:
+1. Go to [github.com/new](https://github.com/new) and create a repository named `creative-calculator` (keep it Public or Private).
+2. Connect and push your code:
 ```bash
-npm i -g vercel
-vercel
+git remote add origin https://github.com/YOUR_USERNAME/creative-calculator.git
+git push -u origin main
 ```
 
-### Method 2: Via GitHub / Vercel Dashboard
-1. Push this folder to a GitHub repository.
-2. Go to [vercel.com](https://vercel.com) and click **"Add New Project"**.
-3. Import your repository and click **"Deploy"** (no build command needed; `vercel.json` is already configured).
+*(Note: `.env.local` containing your private API key is automatically protected and excluded by `.gitignore`)*
+
+---
+
+### Step 2: Deploy to Vercel (1-Click)
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
+2. Click **"Add New..."** -> **"Project"**.
+3. Select your `creative-calculator` repository and click **Import**.
+4. In the **Environment Variables** section, add:
+   - **Key:** `GEMINI_API_KEY`
+   - **Value:** *Your Gemini API Key*
+5. Click **Deploy**.
+
+Vercel will automatically host the responsive frontend and run `api/parse.js` and `api/settings.js` as high-speed serverless functions!
