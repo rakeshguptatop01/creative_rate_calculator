@@ -196,7 +196,11 @@ Rules:
   }
 
   // Static File Serving
-  let filePath = path.join(__dirname, pathname === "/" ? "index.html" : pathname);
+  const relFile = pathname === "/" ? "index.html" : pathname.replace(/^\//, "");
+  let filePath = path.join(__dirname, "public", relFile);
+  if (!fs.existsSync(filePath)) {
+    filePath = path.join(__dirname, relFile);
+  }
   const ext = path.extname(filePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
