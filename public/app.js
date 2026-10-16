@@ -264,9 +264,8 @@
   function renderUniversalCustomDropdown(selectId) {
     const hiddenSelect = $(selectId);
     const trigger = $(`${selectId}-trigger`);
-    const triggerText = $(`${selectId}-trigger-text`);
     const panel = $(`${selectId}-panel`);
-    if (!hiddenSelect || !trigger || !panel || !triggerText) return;
+    if (!hiddenSelect || !trigger || !panel) return;
 
     const options = Array.from(hiddenSelect.options);
     if (options.length === 0) return;
@@ -292,13 +291,21 @@
     };
 
     const currentParsed = parseOptText(currentOpt.text);
-    triggerText.innerHTML = `
-      <span style="font-weight: 600; color: var(--color-ink);">${escapeHtml(currentParsed.title)}</span>
-      ${currentParsed.meta ? `<span style="color: #64748b; font-size: 12px; margin-left: 6px;">${escapeHtml(currentParsed.meta)}</span>` : ""}
-    `;
 
-    // Search header is enabled for dropdowns with 3 or more options (substrates, booklet sizes, binding, units)
-    const showSearch = options.length >= 3;
+    // Structure the trigger so the field itself contains both the formatted text AND the embedded search input!
+    trigger.innerHTML = `
+      <div class="custom-select-input-box">
+        <span class="custom-select-trigger-text" id="${selectId}-trigger-text">
+          <span style="font-weight: 600; color: var(--color-ink);">${escapeHtml(currentParsed.title)}</span>
+          ${currentParsed.meta ? `<span style="color: #64748b; font-size: 12px; margin-left: 6px;">${escapeHtml(currentParsed.meta)}</span>` : ""}
+        </span>
+        <input type="text" class="custom-select-search-field" id="${selectId}-search-field" placeholder="Search (e.g. 220, gumming, A4)..." autocomplete="off" spellcheck="false" style="display: none;">
+      </div>
+      <div class="custom-select-actions">
+        <button type="button" class="custom-select-clear-btn" id="${selectId}-clear-btn" style="display: none;" title="Clear search">✕</button>
+        <svg class="custom-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+    `;
 
     const itemsHtml = options.map((opt, idx) => {
       const isSelected = opt.value === selectedValue;
@@ -320,16 +327,8 @@
       `;
     }).join("");
 
+    // Direct items list at top of panel — NO REDUNDANT INNER SEARCH BOX!
     panel.innerHTML = `
-      ${showSearch ? `
-        <div class="custom-dropdown-search-wrap" onclick="event.stopPropagation()">
-          <svg class="custom-dropdown-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" class="custom-dropdown-search-input" placeholder="Search (e.g. 220, gumming, A4)..." autocomplete="off" spellcheck="false">
-          <button type="button" class="custom-dropdown-search-clear" style="display: none;" title="Clear search">✕</button>
-        </div>
-      ` : ""}
       <div class="custom-dropdown-items-list" role="listbox">
         ${itemsHtml}
       </div>
@@ -338,37 +337,57 @@
       </div>
     `;
 
+    const triggerText = $(`${selectId}-trigger-text`);
+    const searchField = $(`${selectId}-search-field`);
+    const clearBtn = $(`${selectId}-clear-btn`);
     const itemsList = panel.querySelector(".custom-dropdown-items-list");
-    const searchInput = panel.querySelector(".custom-dropdown-search-input");
-    const searchClear = panel.querySelector(".custom-dropdown-search-clear");
     const emptyNotice = panel.querySelector(".custom-dropdown-empty");
 
-    // Click handler for selection
+    // Close helper for this select
+    const closeThisDropdown = () => {
+      panel.style.display = "none";
+      trigger.classList.remove("open");
+      const wrapper = trigger.closest(".custom-select-wrapper");
+      if (wrapper) wrapper.classList.remove("is-open");
+      const card = trigger.closest(".content-card");
+      if (card) card.classList.remove("has-open-dropdown");
+
+      if (searchField) {
+        searchField.value = "";
+        searchField.style.display = "none";
+      }
+      if (triggerText) {
+        triggerText.style.display = "block";
+      }
+      if (clearBtn) {
+        clearBtn.style.display = "none";
+      }
+    };
+
+    // Item click
     panel.querySelectorAll(".custom-dropdown-item").forEach((item) => {
       item.onclick = (e) => {
         e.stopPropagation();
         const clickedVal = item.dataset.val;
         hiddenSelect.value = clickedVal;
-        panel.style.display = "none";
-        trigger.classList.remove("open");
+        closeThisDropdown();
         renderUniversalCustomDropdown(selectId);
         hiddenSelect.dispatchEvent(new Event("change", { bubbles: true }));
         calculateQuote();
       };
     });
 
-    // Real-time live filtering and top-sorting of search query
-    if (searchInput && itemsList) {
+    // Real-time live filtering using the trigger's search field
+    if (searchField && itemsList) {
       const handleFilter = () => {
-        const q = searchInput.value.trim().toLowerCase();
-        if (searchClear) {
-          searchClear.style.display = q.length > 0 ? "flex" : "none";
+        const q = searchField.value.trim().toLowerCase();
+        if (clearBtn) {
+          clearBtn.style.display = q.length > 0 ? "inline-flex" : "none";
         }
 
         const allItems = Array.from(itemsList.querySelectorAll(".custom-dropdown-item"));
 
         if (!q) {
-          // Restore original order and show all
           allItems.sort((a, b) => Number(a.dataset.index) - Number(b.dataset.index));
           allItems.forEach((it) => {
             it.style.display = "flex";
@@ -386,12 +405,12 @@
 
           if (title.includes(q)) {
             if (title.startsWith(q) || title.includes(" " + q)) {
-              score = 100; // Exact prefix or whole word match in title
+              score = 100;
             } else {
-              score = 60; // Substring match in title
+              score = 60;
             }
           } else if (meta.includes(q)) {
-            score = 30; // Match in specification metadata / rate
+            score = 30;
           }
 
           it.dataset.score = score;
@@ -403,7 +422,6 @@
           }
         });
 
-        // Sort so the highest matching score appears directly at the top
         allItems.sort((a, b) => {
           const diff = (Number(b.dataset.score) || 0) - (Number(a.dataset.score) || 0);
           if (diff !== 0) return diff;
@@ -413,7 +431,7 @@
 
         if (emptyNotice) {
           if (matchCount === 0) {
-            emptyNotice.textContent = `🔍 No options matching "${searchInput.value.trim()}"`;
+            emptyNotice.textContent = `🔍 No options matching "${searchField.value.trim()}"`;
             emptyNotice.style.display = "block";
           } else {
             emptyNotice.style.display = "none";
@@ -421,10 +439,9 @@
         }
       };
 
-      searchInput.addEventListener("input", handleFilter);
+      searchField.addEventListener("input", handleFilter);
 
-      // Keyboard support: Enter selects top visible match, Escape closes
-      searchInput.addEventListener("keydown", (e) => {
+      searchField.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
           e.stopPropagation();
@@ -435,17 +452,16 @@
           }
         } else if (e.key === "Escape") {
           e.stopPropagation();
-          panel.style.display = "none";
-          trigger.classList.remove("open");
+          closeThisDropdown();
         }
       });
 
-      if (searchClear) {
-        searchClear.addEventListener("click", (e) => {
+      if (clearBtn) {
+        clearBtn.addEventListener("click", (e) => {
           e.stopPropagation();
-          searchInput.value = "";
+          searchField.value = "";
           handleFilter();
-          searchInput.focus();
+          searchField.focus();
         });
       }
     }
@@ -462,44 +478,75 @@
       if (!trigger || !panel) return;
 
       trigger.addEventListener("click", (e) => {
+        // If clicking the input or clear button while open, don't toggle close!
+        if (e.target.classList.contains("custom-select-search-field") && trigger.classList.contains("open")) {
+          return;
+        }
+        if (e.target.classList.contains("custom-select-clear-btn")) {
+          return;
+        }
         e.stopPropagation();
-        const isOpen = panel.style.display === "flex" || panel.style.display === "block";
+        const isOpen = trigger.classList.contains("open");
 
         // Close all other dropdown panels
         ALL_CUSTOM_DROPDOWN_IDS.forEach((otherId) => {
           if (otherId !== id) {
             const op = $(`${otherId}-panel`);
             const ot = $(`${otherId}-trigger`);
+            const ow = ot?.closest(".custom-select-wrapper");
+            const oc = ot?.closest(".content-card");
+            const otText = $(`${otherId}-trigger-text`);
+            const otSearch = $(`${otherId}-search-field`);
+            const otClear = $(`${otherId}-clear-btn`);
             if (op) op.style.display = "none";
             if (ot) ot.classList.remove("open");
+            if (ow) ow.classList.remove("is-open");
+            if (oc) oc.classList.remove("has-open-dropdown");
+            if (otText) otText.style.display = "block";
+            if (otSearch) { otSearch.style.display = "none"; otSearch.value = ""; }
+            if (otClear) otClear.style.display = "none";
           }
         });
+
+        const wrapper = trigger.closest(".custom-select-wrapper");
+        const card = trigger.closest(".content-card");
+        const triggerText = $(`${id}-trigger-text`);
+        const searchField = $(`${id}-search-field`);
+        const clearBtn = $(`${id}-clear-btn`);
+        const itemsList = panel.querySelector(".custom-dropdown-items-list");
+        const emptyNotice = panel.querySelector(".custom-dropdown-empty");
 
         if (isOpen) {
           panel.style.display = "none";
           trigger.classList.remove("open");
+          if (wrapper) wrapper.classList.remove("is-open");
+          if (card) card.classList.remove("has-open-dropdown");
+          if (triggerText) triggerText.style.display = "block";
+          if (searchField) { searchField.style.display = "none"; searchField.value = ""; }
+          if (clearBtn) clearBtn.style.display = "none";
         } else {
           panel.style.display = "flex";
           trigger.classList.add("open");
+          if (wrapper) wrapper.classList.add("is-open");
+          if (card) card.classList.add("has-open-dropdown");
 
-          // Reset search box and restore clean list
-          const searchInput = panel.querySelector(".custom-dropdown-search-input");
-          const searchClear = panel.querySelector(".custom-dropdown-search-clear");
-          const emptyNotice = panel.querySelector(".custom-dropdown-empty");
-          const itemsList = panel.querySelector(".custom-dropdown-items-list");
-          if (searchInput && itemsList) {
-            searchInput.value = "";
-            if (searchClear) searchClear.style.display = "none";
-            if (emptyNotice) emptyNotice.style.display = "none";
+          // Switch field from text display to live search input!
+          if (triggerText) triggerText.style.display = "none";
+          if (searchField) {
+            searchField.style.display = "block";
+            searchField.value = "";
+            searchField.focus();
+          }
+          if (clearBtn) clearBtn.style.display = "none";
+          if (emptyNotice) emptyNotice.style.display = "none";
+
+          if (itemsList) {
             const allItems = Array.from(itemsList.querySelectorAll(".custom-dropdown-item"));
             allItems.sort((a, b) => Number(a.dataset.index) - Number(b.dataset.index));
             allItems.forEach((it) => {
               it.style.display = "flex";
               itemsList.appendChild(it);
             });
-            setTimeout(() => {
-              searchInput.focus();
-            }, 30);
           }
 
           const sel = panel.querySelector(".custom-dropdown-item.selected");
@@ -514,9 +561,18 @@
         const trigger = $(`${id}-trigger`);
         const panel = $(`${id}-panel`);
         const wrapper = trigger?.closest(".custom-select-wrapper");
+        const card = trigger?.closest(".content-card");
         if (wrapper && !wrapper.contains(e.target)) {
           if (panel) panel.style.display = "none";
           if (trigger) trigger.classList.remove("open");
+          if (wrapper) wrapper.classList.remove("is-open");
+          if (card) card.classList.remove("has-open-dropdown");
+          const triggerText = $(`${id}-trigger-text`);
+          const searchField = $(`${id}-search-field`);
+          const clearBtn = $(`${id}-clear-btn`);
+          if (triggerText) triggerText.style.display = "block";
+          if (searchField) { searchField.style.display = "none"; searchField.value = ""; }
+          if (clearBtn) clearBtn.style.display = "none";
         }
       });
     });
@@ -527,8 +583,18 @@
         ALL_CUSTOM_DROPDOWN_IDS.forEach((id) => {
           const panel = $(`${id}-panel`);
           const trigger = $(`${id}-trigger`);
+          const wrapper = trigger?.closest(".custom-select-wrapper");
+          const card = trigger?.closest(".content-card");
           if (panel) panel.style.display = "none";
           if (trigger) trigger.classList.remove("open");
+          if (wrapper) wrapper.classList.remove("is-open");
+          if (card) card.classList.remove("has-open-dropdown");
+          const triggerText = $(`${id}-trigger-text`);
+          const searchField = $(`${id}-search-field`);
+          const clearBtn = $(`${id}-clear-btn`);
+          if (triggerText) triggerText.style.display = "block";
+          if (searchField) { searchField.style.display = "none"; searchField.value = ""; }
+          if (clearBtn) clearBtn.style.display = "none";
         });
       }
     });
@@ -678,7 +744,9 @@
 
     if ($("bro-pages")) {
       $("bro-pages").addEventListener("blur", () => {
-        let p = parseInt($("bro-pages").value) || 8;
+        const val = $("bro-pages").value.trim();
+        if (!val) return;
+        let p = parseInt(val) || 4;
         if (p < 4) p = 4;
         if (p % 4 !== 0) p = Math.ceil(p / 4) * 4;
         $("bro-pages").value = p;
@@ -692,6 +760,10 @@
 
     // WhatsApp Copy Button
     $("btn-copy-quote").addEventListener("click", copyWhatsAppQuote);
+
+    // Reset Form / Clear All Buttons (Header Bar & Sticky Quote Card)
+    $("btn-reset-app")?.addEventListener("click", () => resetCalculator(true));
+    $("btn-reset-quote")?.addEventListener("click", () => resetCalculator(true));
 
     // Owner Auth & Toggle & Logout
     $("btn-toggle-owner").addEventListener("click", handleOwnerToggle);
@@ -1018,14 +1090,68 @@
     const found = substrates.find((s) => s.name.toLowerCase().includes(lowerKey));
     if (found) {
       sel.value = found.id;
+      if (selectId === "std-substrate" && found.size) {
+        currentForcedSheetSize = found.size;
+        updateSheetToggleButtons();
+      }
       renderUniversalCustomDropdown(selectId);
     }
+  }
+
+  // --- AI FEEDBACK BANNER HELPER WITH RESET / START OVER ---
+  function renderAIFeedbackBanner(contentHtml) {
+    const banner = $("ai-feedback-banner");
+    if (!banner) return;
+    banner.style.display = "block";
+    banner.innerHTML = `
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
+        <div style="flex: 1;">
+          <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
+            <span>✨</span><span>AI Specification Configured</span>
+          </div>
+          <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
+            ${contentHtml}
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; margin-top: 2px;">
+          <button type="button" class="btn-banner-reset-action" style="background: #ffffff; border: 1px solid #86efac; color: #166534; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.04); transition: all 0.15s ease;" title="Clear search and start over">
+            🔄 Start Over
+          </button>
+          <button type="button" class="btn-banner-close-action" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
+        </div>
+      </div>
+    `;
+    banner.querySelector(".btn-banner-reset-action")?.addEventListener("click", () => resetCalculator(true));
+    banner.querySelector(".btn-banner-close-action")?.addEventListener("click", () => {
+      banner.style.display = "none";
+    });
   }
 
   // --- AI NATURAL LANGUAGE / WHATSAPP PARSER ---
   function setupAIParserListeners() {
     const parseBtn = $("btn-ai-parse");
     const promptInput = $("ai-prompt-input");
+    const clearBtn = $("btn-ai-clear");
+
+    if (promptInput) {
+      promptInput.addEventListener("input", () => {
+        if (clearBtn) {
+          clearBtn.style.display = promptInput.value.length > 0 ? "inline-flex" : "none";
+        }
+      });
+      if (clearBtn) {
+        clearBtn.addEventListener("click", () => {
+          promptInput.value = "";
+          clearBtn.style.display = "none";
+          const banner = $("ai-feedback-banner");
+          if (banner) {
+            banner.style.display = "none";
+            banner.innerHTML = "";
+          }
+          promptInput.focus();
+        });
+      }
+    }
 
     if (parseBtn && promptInput) {
       parseBtn.addEventListener("click", () => parseAIPrompt(promptInput.value));
@@ -1037,7 +1163,10 @@
     document.querySelectorAll(".ai-chip").forEach((chip) => {
       chip.addEventListener("click", () => {
         const text = chip.dataset.example;
-        if (promptInput) promptInput.value = text;
+        if (promptInput) {
+          promptInput.value = text;
+          if (clearBtn) clearBtn.style.display = "inline-flex";
+        }
         parseAIPrompt(text);
       });
     });
@@ -1155,21 +1284,11 @@
 
       calculateQuote();
 
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              Detected: <b>${pages}-Page ${bookSizeName}</b> · <b>${bindingName}</b> · <b>${lamName}</b> · <b>Double Sided Print (F/B)</b><br>
-              Quantity: <b>${qty} ${qty === 1 ? "book" : "books"}</b>${!hasExplicitQty ? ` <span style="color: #64748b; font-size: 11.5px;">(Standard default · specify in prompt if different, e.g. "500 books")</span>` : ""}
-              ${pages % 4 !== 0 ? `<br><span style="color: #b45309; font-weight: 500;">⚠️ Auto-adjusted ${pages} pages to <b>${Math.ceil(pages / 4) * 4} pages</b> (multiples of 4 required for binding).</span>` : ""}
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        Detected: <b>${pages}-Page ${bookSizeName}</b> · <b>${bindingName}</b> · <b>${lamName}</b> · <b>Double Sided Print (F/B)</b><br>
+        Quantity: <b>${qty} ${qty === 1 ? "book" : "books"}</b>${!hasExplicitQty ? ` <span style="color: #64748b; font-size: 11.5px;">(Standard default · specify in prompt if different, e.g. "500 books")</span>` : ""}
+        ${pages % 4 !== 0 ? `<br><span style="color: #b45309; font-weight: 500;">⚠️ Auto-adjusted ${pages} pages to <b>${Math.ceil(pages / 4) * 4} pages</b> (multiples of 4 required for binding).</span>` : ""}
+      `);
       return;
     }
 
@@ -1194,128 +1313,58 @@
       const totalSheets = nesting ? nesting.sheetsNeeded : Math.ceil(qty / currentUps);
       const yieldPerSheet = nesting ? nesting.yield : currentUps;
 
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Size:</b> ${spec.width}" × ${spec.height}" (${spec.isDieCut ? "Plotter Die Cut with 15mm sensor margins" : "Straight Cut"}) · <b>Quantity:</b> ${qty} pcs<br>
-              <b>Imposition:</b> <b>${yieldPerSheet} stickers / sheet</b> on ${nesting ? nesting.sheetName : "12×18"} → <b>${totalSheets} parent sheets</b> needed.
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Size:</b> ${spec.width}" × ${spec.height}" (${spec.isDieCut ? "Plotter Die Cut with 15mm sensor margins" : "Straight Cut"}) · <b>Quantity:</b> ${qty} pcs<br>
+        <b>Imposition:</b> <b>${yieldPerSheet} stickers / sheet</b> on ${nesting ? nesting.sheetName : "12×18"} → <b>${totalSheets} parent sheets</b> needed.
+      `);
     } else if (spec.preset === "a4" || /a4/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="2"]').click();
       calculateQuote();
       const mediaName = substrates.find((s) => s.id === $("std-substrate").value)?.name || "Art Card";
       const sheetsNeeded = Math.ceil(qty / 2);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A4 Size (Half Sheet / 2 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 2 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A4 Size (Half Sheet / 2 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 2 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
+      `);
     } else if (spec.preset === "a5" || /a5/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="4"]').click();
       calculateQuote();
       const mediaName = substrates.find((s) => s.id === $("std-substrate").value)?.name || "Art Paper";
       const sheetsNeeded = Math.ceil(qty / 4);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A5 Size (Quarter Sheet / 4 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 4 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A5 Size (Quarter Sheet / 4 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 4 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
+      `);
     } else if (spec.preset === "a6" || /a6/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="8"]').click();
       calculateQuote();
       const mediaName = substrates.find((s) => s.id === $("std-substrate").value)?.name || "Art Paper";
       const sheetsNeeded = Math.ceil(qty / 8);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A6 Size (1/8th Sheet / 8 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 8 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A6 Size (1/8th Sheet / 8 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 8 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
+      `);
     } else if (spec.preset === "a7" || /a7/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="16"]').click();
       calculateQuote();
       const mediaName = substrates.find((s) => s.id === $("std-substrate").value)?.name || "Art Paper";
       const sheetsNeeded = Math.ceil(qty / 16);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A7 Size (1/16th Sheet / 16 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 16 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A7 Size (1/16th Sheet / 16 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 16 per sheet] · <b>Media:</b> ${escapeHtml(mediaName)}
+      `);
     } else if (spec.preset === "a3" || /a3/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="1"]').click();
       calculateQuote();
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A3 / Full Sheet (1 up) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${qty} Machine Sheets (12×18)</b>
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A3 / Full Sheet (1 up) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${qty} Machine Sheets (12×18)</b>
+      `);
     } else {
       calculateQuote();
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              Updated specifications for <b>${qty} pieces</b>.
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        Updated specifications for <b>${qty} pieces</b>.
+      `);
     }
   }
 
@@ -1437,22 +1486,11 @@
 
       calculateQuote();
 
-      let explanation = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              Detected: <b>${pages}-Page ${bookSizeName}</b> · <b>${bindingName}</b> · <b>${lamName}</b> · <b>Double Sided Print (F/B)</b><br>
-              Quantity: <b>${qty} ${qty === 1 ? "book" : "books"}</b>${!hasExplicitQty ? ` <span style="color: #64748b; font-size: 11.5px;">(Standard default · specify in prompt if different, e.g. "500 books")</span>` : ""}
-              ${pages % 4 !== 0 ? `<br><span style="color: #b45309; font-weight: 500;">⚠️ Auto-adjusted ${pages} pages to <b>${Math.ceil(pages / 4) * 4} pages</b> (multiples of 4 required for binding).</span>` : ""}
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
-      banner.innerHTML = explanation;
+      renderAIFeedbackBanner(`
+        Detected: <b>${pages}-Page ${bookSizeName}</b> · <b>${bindingName}</b> · <b>${lamName}</b> · <b>Double Sided Print (F/B)</b><br>
+        Quantity: <b>${qty} ${qty === 1 ? "book" : "books"}</b>${!hasExplicitQty ? ` <span style="color: #64748b; font-size: 11.5px;">(Standard default · specify in prompt if different, e.g. "500 books")</span>` : ""}
+        ${pages % 4 !== 0 ? `<br><span style="color: #b45309; font-weight: 500;">⚠️ Auto-adjusted ${pages} pages to <b>${Math.ceil(pages / 4) * 4} pages</b> (multiples of 4 required for binding).</span>` : ""}
+      `);
       return;
     }
 
@@ -1510,124 +1548,54 @@
       const totalSheets = nesting ? nesting.sheetsNeeded : Math.ceil(qty / currentUps);
       const yieldPerSheet = nesting ? nesting.yield : currentUps;
 
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Size:</b> ${w}" × ${h}" (${isDieCut ? "Plotter Die Cut with 15mm sensor margins" : "Straight Cut"}) · <b>Quantity:</b> ${qty} pcs<br>
-              <b>Imposition:</b> <b>${yieldPerSheet} stickers / sheet</b> on ${nesting ? nesting.sheetName : "12×18"} → <b>${totalSheets} parent sheets</b> needed.
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Size:</b> ${w}" × ${h}" (${isDieCut ? "Plotter Die Cut with 15mm sensor margins" : "Straight Cut"}) · <b>Quantity:</b> ${qty} pcs<br>
+        <b>Imposition:</b> <b>${yieldPerSheet} stickers / sheet</b> on ${nesting ? nesting.sheetName : "12×18"} → <b>${totalSheets} parent sheets</b> needed.
+      `);
     } else if (/a4/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="2"]').click();
       calculateQuote();
       const sheetsNeeded = Math.ceil(qty / 2);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A4 Size (Half Sheet / 2 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 2 per sheet]
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A4 Size (Half Sheet / 2 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 2 per sheet]
+      `);
     } else if (/a5/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="4"]').click();
       calculateQuote();
       const sheetsNeeded = Math.ceil(qty / 4);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A5 Size (Quarter Sheet / 4 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 4 per sheet]
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A5 Size (Quarter Sheet / 4 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 4 per sheet]
+      `);
     } else if (/a6/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="8"]').click();
       calculateQuote();
       const sheetsNeeded = Math.ceil(qty / 8);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A6 Size (1/8th Sheet / 8 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 8 per sheet]
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A6 Size (1/8th Sheet / 8 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 8 per sheet]
+      `);
     } else if (/a7/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="16"]').click();
       calculateQuote();
       const sheetsNeeded = Math.ceil(qty / 16);
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A7 Size (1/16th Sheet / 16 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 16 per sheet]
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A7 Size (1/16th Sheet / 16 ups) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${sheetsNeeded} Machine Sheets (12×18)</b> [${qty} pcs ÷ 16 per sheet]
+      `);
     } else if (/a3/i.test(text)) {
       document.getElementById("layout-toggle-preset").click();
       document.querySelector('.ups-card[data-ups="1"]').click();
       calculateQuote();
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              <b>Preset:</b> A3 / Full Sheet (1 up) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${qty} Machine Sheets (12×18)</b>
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        <b>Preset:</b> A3 / Full Sheet (1 up) · <b>Quantity:</b> ${qty} pcs · <b>Sheet Consumption:</b> <b>${qty} Machine Sheets (12×18)</b>
+      `);
     } else {
       calculateQuote();
-      banner.innerHTML = `
-        <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;">
-          <div>
-            <div style="font-weight: 600; color: #15803d; margin-bottom: 3px; display: flex; align-items: center; gap: 6px;">
-              <span>✨</span><span>AI Specification Configured</span>
-            </div>
-            <div style="color: #14532d; font-size: 13px; line-height: 1.45;">
-              Updated specifications for <b>${qty} pieces</b>.
-            </div>
-          </div>
-          <button type="button" onclick="document.getElementById('ai-feedback-banner').style.display='none'" style="background: none; border: none; font-size: 16px; color: #15803d; cursor: pointer; padding: 0 4px; line-height: 1; opacity: 0.75;" title="Dismiss">✕</button>
-        </div>
-      `;
+      renderAIFeedbackBanner(`
+        Updated specifications for <b>${qty} pieces</b>.
+      `);
     }
   }
 
@@ -1642,7 +1610,12 @@
 
   // 1. STANDARD SHEET / FLYER / STICKER CALCULATION
   function calculateStandardQuote() {
-    const qty = Math.max(1, parseInt($("std-qty").value) || 1);
+    const qtyVal = $("std-qty").value.trim();
+    if (!qtyVal || parseInt(qtyVal) <= 0) {
+      renderBlankQuote("Enter quantity (finished pieces) to calculate instant quotation");
+      return;
+    }
+    const qty = parseInt(qtyVal);
     const subId = $("std-substrate").value;
     const substrate = substrates.find((s) => s.id === subId) || substrates[0];
 
@@ -1655,8 +1628,22 @@
     let dieCutCharge = 0;
 
     if (currentLayoutType === "custom") {
-      const w = parseFloat($("dim-width").value) || 2.25;
-      const h = parseFloat($("dim-height").value) || 6.6;
+      const wVal = $("dim-width").value.trim();
+      const hVal = $("dim-height").value.trim();
+      if (!wVal || !hVal || parseFloat(wVal) <= 0 || parseFloat(hVal) <= 0) {
+        const svgContainer = $("sheet-svg-wrapper");
+        if (svgContainer) {
+          svgContainer.innerHTML = `<div style="padding: 28px; text-align: center; color: var(--color-muted); font-size: 13px;">Enter sticker dimensions (Width × Height) to render sheet imposition</div>`;
+        }
+        const infoBadge = $("visualizer-info-badge");
+        if (infoBadge) infoBadge.innerHTML = `<b>Awaiting Dimensions</b>`;
+        const yieldBadge = $("visualizer-yield-badge");
+        if (yieldBadge) yieldBadge.innerHTML = `— stickers / sheet`;
+        renderBlankQuote("Enter sticker width and height to calculate 2D imposition");
+        return;
+      }
+      const w = parseFloat(wVal);
+      const h = parseFloat(hVal);
       const unit = $("dim-unit").value || "in";
       const designs = Math.max(1, parseInt($("dim-designs").value) || 1);
       isDieCutActive = $("dim-diecut").checked;
@@ -1676,8 +1663,18 @@
         dieCutCharge = Math.max(50, parentSheets * 0.50);
       }
     } else {
-      parentSheets = Math.ceil(qty / currentUps);
-      cutsDesc = currentUps === 1 ? "Full Sheet (1 pc)" : `${currentUps} pieces per sheet`;
+      let ups = currentUps;
+      const customUpsCard = document.querySelector('.ups-card[data-ups="custom"]');
+      if (customUpsCard && customUpsCard.classList.contains("active")) {
+        const customUpsVal = $("custom-ups-input").value.trim();
+        if (!customUpsVal || parseInt(customUpsVal) <= 0) {
+          renderBlankQuote("Enter custom number of pieces per sheet (Ups)");
+          return;
+        }
+        ups = parseInt(customUpsVal);
+      }
+      parentSheets = Math.ceil(qty / ups);
+      cutsDesc = ups === 1 ? "Full Sheet (1 pc)" : `${ups} pieces per sheet`;
     }
 
     // Determine Applicable Slab
@@ -1762,19 +1759,20 @@
 
       const presetLabel = presetNames[currentUps] || `${currentUps} ups`;
       const isCustom = currentLayoutType === "custom";
+      const effectiveSheetSize = isCustom && currentCustomNesting ? currentCustomNesting.sheetName : substrate.size;
 
       if (isCustom) {
-        $("consumption-headline").innerHTML = `Machine Sheet Consumption: <b>${parentSheets} Sheets (${substrate.size})</b>`;
+        $("consumption-headline").innerHTML = `Machine Sheet Consumption: <b>${parentSheets} Sheets (${effectiveSheetSize})</b>`;
         const exactYield = parentSheets * currentUps;
         const extraYield = exactYield - qty;
-        $("consumption-subtext").innerHTML = `${qty} finished pieces ÷ ${currentUps} stickers/sheet = <b>${parentSheets} machine sheets (${substrate.size})</b>${extraYield > 0 ? ` · Yields ${exactYield} total (${extraYield} extra stickers)` : ""}`;
+        $("consumption-subtext").innerHTML = `${qty} finished pieces ÷ ${currentUps} stickers/sheet = <b>${parentSheets} machine sheets (${effectiveSheetSize})</b>${extraYield > 0 ? ` · Yields ${exactYield} total (${extraYield} extra stickers)` : ""}`;
         $("consumption-tag").textContent = `${currentUps} stickers / sheet`;
       } else {
-        $("consumption-headline").innerHTML = `Machine Sheet Consumption: <b>${parentSheets} Sheets (${substrate.size})</b>`;
+        $("consumption-headline").innerHTML = `Machine Sheet Consumption: <b>${parentSheets} Sheets (${effectiveSheetSize})</b>`;
         const exactYield = parentSheets * currentUps;
         const extraYield = exactYield - qty;
         const divCalc = (qty / currentUps).toFixed(currentUps === 1 ? 0 : 2);
-        $("consumption-subtext").innerHTML = `${qty} finished pieces ÷ ${currentUps} pcs/sheet (${presetLabel}) = ${divCalc} → <b>${parentSheets} machine sheets (${substrate.size})</b>${extraYield > 0 ? ` · Yields ${exactYield} finished pcs (${extraYield} extra)` : ""}`;
+        $("consumption-subtext").innerHTML = `${qty} finished pieces ÷ ${currentUps} pcs/sheet (${presetLabel}) = ${divCalc} → <b>${parentSheets} machine sheets (${effectiveSheetSize})</b>${extraYield > 0 ? ` · Yields ${exactYield} finished pcs (${extraYield} extra)` : ""}`;
         $("consumption-tag").textContent = `${currentUps} pcs / sheet`;
       }
     }
@@ -1829,7 +1827,7 @@
         gstPercent: settings.gstPercent,
         gstAmount: gstAmount,
         finalTotal: finalTotal,
-        sheetSize: substrate.size
+        sheetSize: effectiveSheetSize
       }
     };
 
@@ -1838,8 +1836,16 @@
 
   // 2. MULTI-PAGE BROCHURE / BOOKLET CALCULATION
   function calculateBrochureQuote() {
-    const qty = Math.max(1, parseInt($("bro-qty").value) || 1);
-    const rawPages = parseInt($("bro-pages").value) || 4;
+    const qtyVal = $("bro-qty").value.trim();
+    const pagesVal = $("bro-pages").value.trim();
+
+    if (!qtyVal || parseInt(qtyVal) <= 0 || !pagesVal || parseInt(pagesVal) <= 0) {
+      renderBlankQuote("Enter booklet quantity & total pages to calculate quotation");
+      return;
+    }
+
+    const qty = parseInt(qtyVal);
+    const rawPages = parseInt(pagesVal);
     const totalPages = Math.max(4, rawPages);
     const effectivePages = totalPages % 4 === 0 ? totalPages : Math.ceil(totalPages / 4) * 4;
 
@@ -2011,6 +2017,51 @@
     renderQuoteDisplay(lastCalculatedQuote);
   }
 
+  // --- RENDERING BLANK / UNCALCULATED STATE ---
+  function renderBlankQuote(message) {
+    lastCalculatedQuote = null;
+
+    $("quote-unit-price").textContent = "₹ 0.00";
+    $("quote-total-pre").textContent = "₹ 0.00";
+    $("quote-gst-amt").textContent = "₹ 0.00";
+    $("quote-total-final").textContent = "₹ 0.00";
+    $("quote-qty-label").textContent = currentMode === "brochure" ? "— Books" : "— Pcs";
+
+    const sheetsLabel = $("quote-sheets-label");
+    if (sheetsLabel) {
+      sheetsLabel.textContent = "—";
+    }
+
+    $("mobile-unit-price").textContent = "₹ 0.00";
+    $("mobile-total-price").textContent = "₹ 0.00";
+
+    const slabEl = $("active-slab-tag");
+    if (slabEl) {
+      slabEl.textContent = "Awaiting Input";
+    }
+
+    const consumptionEl = $("sheet-consumption-callout");
+    if (consumptionEl) {
+      $("consumption-headline").innerHTML = `Machine Sheet Consumption: <b>— Sheets</b>`;
+      $("consumption-subtext").innerHTML = `Enter finished quantity to calculate machine sheet consumption & layout yield`;
+      $("consumption-tag").textContent = `— pcs / sheet`;
+    }
+
+    const noteEl = $("brochure-sheet-breakdown-note");
+    if (noteEl) {
+      noteEl.innerHTML = `📘 Enter quantity and pages to calculate sheet consumption & binding details.`;
+    }
+
+    const tableEl = $("owner-breakdown-table");
+    if (tableEl) {
+      tableEl.innerHTML = `
+        <div style="padding: 16px; text-align: center; color: var(--color-muted); font-size: 13px;">
+          ${message || "Enter product specifications to calculate quotation & cost breakdown"}
+        </div>
+      `;
+    }
+  }
+
   // --- RENDERING QUOTE DISPLAY & BREAKDOWN ---
   function renderQuoteDisplay(q) {
     if (!q) return;
@@ -2142,7 +2193,10 @@
 
   // --- WHATSAPP QUOTATION FORMATTER ---
   function copyWhatsAppQuote() {
-    if (!lastCalculatedQuote) return;
+    if (!lastCalculatedQuote) {
+      showToast("⚠️ Enter quantity first to generate a quote before copying");
+      return;
+    }
     const q = lastCalculatedQuote;
 
     let text = `*ESTIMATE / QUOTATION*\n`;
@@ -2186,6 +2240,133 @@
     toast.textContent = msg;
     toast.classList.add("show");
     setTimeout(() => toast.classList.remove("show"), 2500);
+  }
+
+  // --- RESET CALCULATOR TO CLEAN INITIAL STATE ---
+  function resetCalculator(showToastMsg = true) {
+    // 1. Reset AI Smart Search / Parser
+    const promptInput = $("ai-prompt-input");
+    if (promptInput) promptInput.value = "";
+    const aiClearBtn = $("btn-ai-clear");
+    if (aiClearBtn) aiClearBtn.style.display = "none";
+    const aiBanner = $("ai-feedback-banner");
+    if (aiBanner) {
+      aiBanner.style.display = "none";
+      aiBanner.innerHTML = "";
+    }
+
+    // 2. Standard Mode Inputs
+    if ($("std-qty")) $("std-qty").value = "";
+    if ($("custom-ups-input")) $("custom-ups-input").value = "";
+    if ($("dim-width")) $("dim-width").value = "";
+    if ($("dim-height")) $("dim-height").value = "";
+    if ($("dim-designs")) $("dim-designs").value = "";
+    if ($("std-cutting")) $("std-cutting").value = "";
+    if ($("std-other")) $("std-other").value = "";
+
+    // Radios
+    const stdPrS = $("std-pr-s");
+    if (stdPrS) stdPrS.checked = true;
+    const stdLmN = $("std-lm-n");
+    if (stdLmN) stdLmN.checked = true;
+    const stdCmT = $("std-cm-t");
+    if (stdCmT) stdCmT.checked = true;
+    const stdOmT = $("std-om-t");
+    if (stdOmT) stdOmT.checked = true;
+
+    // Checkboxes
+    if ($("dim-diecut")) $("dim-diecut").checked = false;
+    const plotterPanel = $("plotter-calibration-panel");
+    if (plotterPanel) plotterPanel.style.display = "none";
+
+    document.querySelectorAll(".std-custom-srv-chk").forEach((chk) => (chk.checked = false));
+
+    // Preset / Custom Layout
+    const togglePreset = $("layout-toggle-preset");
+    const toggleCustom = $("layout-toggle-custom");
+    if (togglePreset && toggleCustom) {
+      togglePreset.classList.add("active");
+      toggleCustom.classList.remove("active");
+      currentLayoutType = "preset";
+      const presetSec = $("preset-cuts-section");
+      if (presetSec) presetSec.style.display = "block";
+      const customSec = $("custom-dimension-section");
+      if (customSec) customSec.style.display = "none";
+    }
+
+    // Default ups = 2 (A4 Half Sheet)
+    document.querySelectorAll(".ups-card").forEach((c) => c.classList.remove("active"));
+    const defUpsCard = document.querySelector('.ups-card[data-ups="2"]');
+    if (defUpsCard) defUpsCard.classList.add("active");
+    if ($("custom-ups-container")) $("custom-ups-container").style.display = "none";
+    currentUps = 2;
+
+    // 3. Brochure Mode Inputs
+    if ($("bro-qty")) $("bro-qty").value = "";
+    if ($("bro-pages")) $("bro-pages").value = "";
+    if ($("bro-cutting")) $("bro-cutting").value = "";
+    if ($("bro-other")) $("bro-other").value = "";
+
+    const broCpD = $("bro-cp-d");
+    if (broCpD) broCpD.checked = true;
+    const broClN = $("bro-cl-n");
+    if (broClN) broClN.checked = true;
+    const broIpD = $("bro-ip-d");
+    if (broIpD) broIpD.checked = true;
+    const broCmT = $("bro-cm-t");
+    if (broCmT) broCmT.checked = true;
+    const broOmT = $("bro-om-t");
+    if (broOmT) broOmT.checked = true;
+
+    document.querySelectorAll(".bro-custom-srv-chk").forEach((chk) => (chk.checked = false));
+
+    // 4. Reset substrates and select dropdowns to clean defaults
+    if ($("std-substrate") && substrates.length > 0) {
+      $("std-substrate").value = substrates[0].id;
+    }
+    if ($("bro-cover-substrate") && substrates.length > 0) {
+      const covDefault = substrates.find((s) => s.name.includes("300 GSM")) || substrates[3] || substrates[0];
+      $("bro-cover-substrate").value = covDefault.id;
+    }
+    if ($("bro-inner-substrate") && substrates.length > 0) {
+      const inDefault = substrates.find((s) => s.name.includes("130 GSM")) || substrates[0];
+      $("bro-inner-substrate").value = inDefault.id;
+    }
+    if ($("bro-size")) $("bro-size").value = "a4";
+    if ($("bro-binding") && settings.bindingMethods && settings.bindingMethods.length > 0) {
+      $("bro-binding").value = settings.bindingMethods[0].id;
+    }
+    if ($("dim-unit")) $("dim-unit").value = "in";
+
+    // Close all open dropdown panels and remove is-open / has-open-dropdown
+    ALL_CUSTOM_DROPDOWN_IDS.forEach((id) => {
+      const panel = $(`${id}-panel`);
+      const trigger = $(`${id}-trigger`);
+      const wrapper = trigger?.closest(".custom-select-wrapper");
+      const card = trigger?.closest(".content-card");
+      if (panel) panel.style.display = "none";
+      if (trigger) trigger.classList.remove("open");
+      if (wrapper) wrapper.classList.remove("is-open");
+      if (card) card.classList.remove("has-open-dropdown");
+      renderUniversalCustomDropdown(id);
+    });
+
+    // Reset sheet size to auto
+    currentForcedSheetSize = "auto";
+    updateSheetToggleButtons();
+
+    // Clear Sheet SVG
+    const svgWrapper = $("sheet-svg-wrapper");
+    if (svgWrapper) {
+      svgWrapper.innerHTML = `<div style="padding: 28px; text-align: center; color: var(--color-muted); font-size: 13px;">Enter sticker dimensions (Width × Height) to render sheet imposition</div>`;
+    }
+
+    // 5. Recalculate quote (will hit renderBlankQuote)
+    calculateQuote();
+
+    if (showToastMsg) {
+      showToast("Calculator reset to clean state ✓");
+    }
   }
 
   // --- OWNER AUTHENTICATION & ADMIN MODAL ---

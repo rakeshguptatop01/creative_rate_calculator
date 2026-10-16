@@ -23,6 +23,10 @@
         <h1 class="brand-title">Creative Print Calculator</h1>
       </div>
       <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button id="btn-reset-app" class="btn btn-secondary btn-sm" type="button" title="Clear all fields and start over" style="font-weight: 500; display: inline-flex; align-items: center; gap: 5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          <span>Reset</span>
+        </button>
         <button id="btn-admin-logout" class="btn btn-secondary btn-sm" style="display: none; border-color: #fca5a5; color: #dc2626; font-weight: 500;" title="Lock Admin Session">
           🔒 Log Out
         </button>
@@ -67,6 +71,7 @@
               placeholder="Dictate items or paste customer WhatsApp inquiry here..."
               autocomplete="off"
             >
+            <button id="btn-ai-clear" class="btn-clear-ai" type="button" title="Clear search input" style="display: none; background: none; border: none; font-size: 15px; color: #64748b; cursor: pointer; padding: 4px 8px; line-height: 1;">✕</button>
             <button id="btn-ai-parse" class="ai-smart-btn" type="button" title="Parse inquiry with AI">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 20h9"></path>
@@ -116,7 +121,7 @@
                 <label class="form-label" for="std-qty">
                   Quantity (Finished Pieces)
                 </label>
-                <input type="number" id="std-qty" class="text-input" value="500" min="1" step="1">
+                <input type="number" id="std-qty" class="text-input" placeholder="e.g. 500" min="1" step="1">
               </div>
 
               <div class="form-group">
@@ -201,7 +206,7 @@
 
               <div id="custom-ups-container" style="display: none; margin-top: 10px;">
                 <label class="form-label" for="custom-ups-input">Custom Pieces per Sheet</label>
-                <input type="number" id="custom-ups-input" class="text-input" value="10" min="1">
+                <input type="number" id="custom-ups-input" class="text-input" placeholder="e.g. 10" min="1">
               </div>
             </div>
 
@@ -210,11 +215,11 @@
               <div class="form-grid-3">
                 <div class="form-group">
                   <label class="form-label" for="dim-width">Width</label>
-                  <input type="number" step="0.01" id="dim-width" class="text-input" value="2.25">
+                  <input type="number" step="0.01" id="dim-width" class="text-input" placeholder="Width">
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="dim-height">Height</label>
-                  <input type="number" step="0.01" id="dim-height" class="text-input" value="6.6">
+                  <input type="number" step="0.01" id="dim-height" class="text-input" placeholder="Height">
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="dim-unit-trigger">Unit</label>
@@ -236,7 +241,7 @@
               <div class="form-grid-2" style="margin-top: 8px;">
                 <div class="form-group">
                   <label class="form-label" for="dim-designs">Number of Designs</label>
-                  <input type="number" id="dim-designs" class="text-input" value="1" min="1" step="1">
+                  <input type="number" id="dim-designs" class="text-input" placeholder="1" min="1" step="1">
                   <span class="form-sublabel">e.g. 3 designs for 3 flavors</span>
                 </div>
                 <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
@@ -346,7 +351,7 @@
             <div class="form-grid-2" style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-surface-soft);">
               <div class="form-group">
                 <label class="form-label" for="std-cutting">Cutting Charge (₹)</label>
-                <input type="number" id="std-cutting" class="text-input" placeholder="0.00" value="0">
+                <input type="number" id="std-cutting" class="text-input" placeholder="0.00">
                 <div class="segmented-control" style="margin-top: 6px;">
                   <div class="segmented-option">
                     <input type="radio" name="std-cut-type" id="std-cm-t" value="t" checked>
@@ -361,7 +366,7 @@
 
               <div class="form-group">
                 <label class="form-label" for="std-other">Other Miscellaneous Charge (₹)</label>
-                <input type="number" id="std-other" class="text-input" placeholder="0.00" value="0">
+                <input type="number" id="std-other" class="text-input" placeholder="0.00">
                 <div class="segmented-control" style="margin-top: 6px;">
                   <div class="segmented-option">
                     <input type="radio" name="std-oth-type" id="std-om-t" value="t" checked>
@@ -399,12 +404,12 @@
             <div class="form-grid-3">
               <div class="form-group">
                 <label class="form-label" for="bro-qty">Quantity of Books</label>
-                <input type="number" id="bro-qty" class="text-input" value="100" min="1" step="1">
+                <input type="number" id="bro-qty" class="text-input" placeholder="e.g. 100" min="1" step="1">
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="bro-pages">Total Pages (Incl. Cover)</label>
-                <input type="number" id="bro-pages" class="text-input" value="16" min="4" step="4">
+                <input type="number" id="bro-pages" class="text-input" placeholder="e.g. 16" min="4" step="4">
                 <span class="form-sublabel">Must be multiple of 4 (e.g. 8, 12, 16, 24)</span>
               </div>
 
@@ -546,7 +551,7 @@
 
               <div class="form-group">
                 <label class="form-label" for="bro-cutting">Trimming / Cutting (₹)</label>
-                <input type="number" id="bro-cutting" class="text-input" placeholder="0.00" value="0">
+                <input type="number" id="bro-cutting" class="text-input" placeholder="0.00">
                 <div class="segmented-control" style="margin-top: 6px;">
                   <div class="segmented-option">
                     <input type="radio" name="bro-cut-type" id="bro-cm-t" value="t" checked>
@@ -561,7 +566,7 @@
 
               <div class="form-group">
                 <label class="form-label" for="bro-other">Other Charges (₹)</label>
-                <input type="number" id="bro-other" class="text-input" placeholder="0.00" value="0">
+                <input type="number" id="bro-other" class="text-input" placeholder="0.00">
                 <div class="segmented-control" style="margin-top: 6px;">
                   <div class="segmented-option">
                     <input type="radio" name="bro-oth-type" id="bro-om-t" value="t" checked>
@@ -607,11 +612,11 @@
             <div class="quote-totals-list">
               <div class="quote-total-row">
                 <span>Total Quantity</span>
-                <b id="quote-qty-label">500 Pcs</b>
+                <b id="quote-qty-label">— Pcs</b>
               </div>
               <div class="quote-total-row" id="quote-sheets-row">
                 <span>Machine Sheets</span>
-                <b id="quote-sheets-label">250 Sheets (12×18)</b>
+                <b id="quote-sheets-label">—</b>
               </div>
               <div class="quote-total-row">
                 <span>Subtotal (Excl. GST)</span>
@@ -630,6 +635,10 @@
             <div class="quote-actions-group">
               <button id="btn-copy-quote" class="btn btn-whatsapp">
                 💬 Copy WhatsApp Quotation
+              </button>
+              <button id="btn-reset-quote" class="btn btn-secondary" type="button" title="Clear all fields and start over" style="width: 100%; justify-content: center; font-size: 13px; padding: 10px 16px; gap: 6px; margin-top: 4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+                <span>Clear & Start Over</span>
               </button>
             </div>
           </div>
