@@ -1,0 +1,8 @@
+# Environment variables (contains private API keys)
+.env
+.env.local
+.env.*.local
+
+# Node dependencies
+node_modules/
+.vercel

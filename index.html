@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Creative Print Calculator — Commercial Print & Signage Pricing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Commercial Digital Press & Signage Pricing Calculator. Instant estimates, brochure multi-paper calculations, and master rate admin.">
+
+  <!-- Inter & Inter Display Typography Stack per DESIGN-airtable.md -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="app.css?v=2.8">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-block">
+        <span class="brand-badge">Digital Press</span>
+        <h1 class="brand-title">Creative Print Calculator</h1>
+      </div>
+      <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+        <button id="btn-admin-logout" class="btn btn-secondary btn-sm" style="display: none; border-color: #fca5a5; color: #dc2626; font-weight: 500;" title="Lock Admin Session">
+          🔒 Log Out
+        </button>
+        <button id="btn-toggle-owner" class="btn btn-secondary btn-sm" title="Owner Admin Settings">
+          🔒 Owner Admin
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace Layout -->
+  <main class="main-wrapper">
+    <div class="calculator-layout">
+
+      <!-- LEFT COLUMN: Interactive Configuration Wizard -->
+      <div class="config-column">
+
+        <!-- ========================================================== -->
+        <!-- AI SMART ENTRY (SAAS CARD) — Matching Screenshot 2 & Spec  -->
+        <!-- ========================================================== -->
+        <div class="ai-smart-card">
+          <div class="ai-smart-header">
+            <div class="ai-smart-title">
+              <span class="ai-smart-icon-wrap" aria-hidden="true">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10 2C10 2 10.6 6.8 12.3 8.5C14 10.2 19 10.5 19 10.5C19 10.5 14 10.8 12.3 12.5C10.6 14.2 10 19 10 19C10 19 9.4 14.2 7.7 12.5C6 10.8 1 10.5 1 10.5C1 10.5 6 10.2 7.7 8.5C9.4 6.8 10 2 10 2Z"/>
+                  <path d="M19 2C19 2 19.3 4 20.2 4.9C21.1 5.8 23 6 23 6C23 6 21.1 6.2 20.2 7.1C19.3 8 19 10 19 10C19 10 18.7 8 17.8 7.1C16.9 6.2 15 6 15 6C15 6 16.9 5.8 17.8 4.9C18.7 4 19 2 19 2Z"/>
+                </svg>
+              </span>
+              <span>AI Smart Entry</span>
+            </div>
+            <div class="ai-smart-desc">
+              Type or paste your requirements to auto-fill the quote (e.g., <em>"500 pcs Vinyl Sticker 2.25 x 6.6 with Die Cutting"</em> or <em>"A4 12 pages 30 qty"</em>).
+            </div>
+          </div>
+
+          <div class="ai-smart-input-container">
+            <input 
+              type="text" 
+              id="ai-prompt-input" 
+              class="ai-smart-input" 
+              placeholder="Dictate items or paste customer WhatsApp inquiry here..."
+              autocomplete="off"
+            >
+            <button id="btn-ai-parse" class="ai-smart-btn" type="button" title="Parse inquiry with AI">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              <span>Parse</span>
+            </button>
+          </div>
+
+          <div class="ai-smart-presets-row">
+            <span class="ai-presets-label">Try Examples:</span>
+            <button type="button" class="ai-chip" data-example='2.25" x 6.6" - - Each 500 pc Vinyl Sticker with Die Cutting'>2.25"×6.6" 500pc Vinyl Die Cut</button>
+            <button type="button" class="ai-chip" data-example='2.7" x 2.7" - - 500 pc vinyl sticker'>2.7"×2.7" 500pc Round Sticker</button>
+            <button type="button" class="ai-chip" data-example='10.5" x 2.7" - Each 500 pc Transparent Sticker'>10.5"×2.7" 500pc Clear Vinyl</button>
+            <button type="button" class="ai-chip" data-example='size A4 Qty. 30 11 pages (JACKVOLT Catalogue.pdf)'>A4 11-page Catalogue Qty 30</button>
+            <button type="button" class="ai-chip" data-example='A4 size 200 qty Matte Lamination 2 fold (Adhyayan ART Brochure.pdf)'>A4 2-Fold 26×38 Brochure</button>
+            <button type="button" class="ai-chip" data-example='1.5"x1.5" 100pcs Normal Gumming'>1.5"×1.5" 100pc Gumming</button>
+          </div>
+
+          <div id="ai-feedback-banner" class="ai-smart-result-banner" style="display: none;"></div>
+        </div>
+
+        <!-- Product Mode Selector (Airtable Pill dialect) -->
+        <div class="mode-tabs-wrapper">
+          <div class="mode-tabs" role="tablist">
+            <button class="mode-tab-btn active" data-mode="standard" role="tab">
+              📄 Single Sheet / Flyer / Vinyl
+            </button>
+            <button class="mode-tab-btn" data-mode="brochure" role="tab">
+              📘 Multi-Page Brochure / Booklet
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MODE 1: STANDARD SHEET / FLYER / STICKER   -->
+        <!-- ========================================== -->
+        <div id="standard-mode-section">
+          <div class="content-card">
+            <div class="card-title-row">
+              <span class="card-title">1. Job Quantity & Substrate</span>
+              <span class="card-subtitle">Select media and total pieces</span>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="std-qty">
+                  Quantity (Finished Pieces)
+                </label>
+                <input type="number" id="std-qty" class="text-input" value="500" min="1" step="1">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="std-substrate-trigger">
+                  Paper / Vinyl Substrate
+                </label>
+                <div class="custom-select-wrapper" id="custom-substrate-wrapper">
+                  <div class="custom-select-trigger" id="std-substrate-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="custom-select-trigger-text" id="std-substrate-trigger-text">Select Paper / Vinyl Substrate...</span>
+                    <svg class="custom-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                  <div class="custom-dropdown-panel" id="std-substrate-panel" style="display: none;" role="listbox"></div>
+                  <select id="std-substrate" class="select-input" style="display: none;"></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Layout Sizing Method Toggle -->
+            <div class="form-group" style="margin-top: var(--space-md);">
+              <label class="form-label">Sizing & Imposition Method</label>
+              <div class="layout-type-toggle">
+                <div class="layout-type-btn active" id="layout-toggle-preset">
+                  Standard Preset Cuts (A4, A5, A6, A7)
+                </div>
+                <div class="layout-type-btn" id="layout-toggle-custom">
+                  📐 Custom Sticker / Card Size (Width × Height)
+                </div>
+              </div>
+            </div>
+
+            <!-- Standard Preset Ups Grid -->
+            <div id="preset-cuts-section">
+              <label class="form-label">
+                Finished Size / Cuts from 1 Sheet (Ups)
+                <span class="form-sublabel">· How many pieces cut from 1 parent machine sheet?</span>
+              </label>
+              <div class="ups-grid">
+                <div class="ups-card" data-ups="1">
+                  <div class="ups-icon-box">1</div>
+                  <div class="ups-title">Full Sheet</div>
+                  <div class="ups-desc">1 pc / sheet (12×18)</div>
+                </div>
+                <div class="ups-card active" data-ups="2">
+                  <div class="ups-icon-box">1/2</div>
+                  <div class="ups-title">Half (A4)</div>
+                  <div class="ups-desc">2 pcs / sheet (8.3×11.7")</div>
+                </div>
+                <div class="ups-card" data-ups="4">
+                  <div class="ups-icon-box">1/4</div>
+                  <div class="ups-title">Quarter (A5)</div>
+                  <div class="ups-desc">4 pcs / sheet (5.8×8.3")</div>
+                </div>
+                <div class="ups-card" data-ups="8">
+                  <div class="ups-icon-box">1/8</div>
+                  <div class="ups-title">1/8th (A6)</div>
+                  <div class="ups-desc">8 pcs / sheet (4.1×5.8")</div>
+                </div>
+                <div class="ups-card" data-ups="16">
+                  <div class="ups-icon-box">1/16</div>
+                  <div class="ups-title">1/16th (A7)</div>
+                  <div class="ups-desc">16 pcs / sheet (2.9×4.1")</div>
+                </div>
+              </div>
+
+              <!-- Live Machine Sheet Consumption & Formula Callout -->
+              <div id="sheet-consumption-callout" class="sheet-consumption-callout">
+                <div class="consumption-main">
+                  <div class="consumption-icon-badge">📄</div>
+                  <div>
+                    <div class="consumption-headline" id="consumption-headline">
+                      Machine Sheet Consumption: <b>25 Sheets (12×18)</b>
+                    </div>
+                    <div class="consumption-subtext" id="consumption-subtext">
+                      50 finished pieces ÷ 2 pcs/sheet (A4) = <b>25 machine sheets</b> required
+                    </div>
+                  </div>
+                </div>
+                <div class="consumption-tag" id="consumption-tag">
+                  2 pcs / sheet
+                </div>
+              </div>
+
+              <div id="custom-ups-container" style="display: none; margin-top: 10px;">
+                <label class="form-label" for="custom-ups-input">Custom Pieces per Sheet</label>
+                <input type="number" id="custom-ups-input" class="text-input" value="10" min="1">
+              </div>
+            </div>
+
+            <!-- Custom Dimension 2D Nesting Section -->
+            <div id="custom-dimension-section" style="display: none;">
+              <div class="form-grid-3">
+                <div class="form-group">
+                  <label class="form-label" for="dim-width">Width</label>
+                  <input type="number" step="0.01" id="dim-width" class="text-input" value="2.25">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="dim-height">Height</label>
+                  <input type="number" step="0.01" id="dim-height" class="text-input" value="6.6">
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="dim-unit-trigger">Unit</label>
+                  <div class="custom-select-wrapper" id="custom-dim-unit-wrapper">
+                    <div class="custom-select-trigger" id="dim-unit-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                      <span class="custom-select-trigger-text" id="dim-unit-trigger-text">Inches (")</span>
+                      <svg class="custom-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                    <div class="custom-dropdown-panel" id="dim-unit-panel" style="display: none;" role="listbox"></div>
+                    <select id="dim-unit" class="select-input" style="display: none;">
+                      <option value="in" selected>Inches (")</option>
+                      <option value="mm">Millimeters (mm)</option>
+                      <option value="cm">Centimeters (cm)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-grid-2" style="margin-top: 8px;">
+                <div class="form-group">
+                  <label class="form-label" for="dim-designs">Number of Designs</label>
+                  <input type="number" id="dim-designs" class="text-input" value="1" min="1" step="1">
+                  <span class="form-sublabel">e.g. 3 designs for 3 flavors</span>
+                </div>
+                <div class="form-group" style="display: flex; flex-direction: column; justify-content: center;">
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--color-ink); cursor: pointer; margin-top: 14px;">
+                    <input type="checkbox" id="dim-diecut" checked style="width: 18px; height: 18px;">
+                    Plotter Die Cutting
+                  </label>
+                  <span class="form-sublabel" style="margin-top: 4px;">Applies optical sensor margin & blade gap</span>
+                </div>
+              </div>
+
+              <!-- Adjustable Plotter Sensor & Blade Gap Calibration -->
+              <div id="plotter-calibration-panel" class="plotter-settings-panel">
+                <div class="plotter-panel-header">
+                  <span class="plotter-panel-title">⚙️ Plotter Machine Sensor & Blade Calibration</span>
+                  <span class="plotter-panel-hint">Adjust if your machine needs less/more margin</span>
+                </div>
+                <div class="form-grid-2" style="margin-bottom: 0;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="dim-sensor-margin">
+                      Sensor Mark Margin (mm)
+                    </label>
+                    <div class="input-with-unit">
+                      <input type="number" id="dim-sensor-margin" class="text-input" value="15" min="2" max="40" step="1">
+                      <span class="input-unit-label">mm</span>
+                    </div>
+                    <span class="form-sublabel">Default: 15mm (Set 8–10mm for compact margin)</span>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="dim-blade-gap">
+                      Blade / Sticker Gap (mm)
+                    </label>
+                    <div class="input-with-unit">
+                      <input type="number" id="dim-blade-gap" class="text-input" value="2.5" min="0" max="15" step="0.5">
+                      <span class="input-unit-label">mm</span>
+                    </div>
+                    <span class="form-sublabel">Default: 2.5mm between sticker cuts</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2D Live Visual Sheet Nesting Display -->
+              <div id="sheet-visualizer-container" class="sheet-visualizer-container">
+                <div class="sheet-size-toggle-bar">
+                  <span class="sheet-toggle-label">Press Sheet Format:</span>
+                  <div class="sheet-toggle-group">
+                    <button type="button" class="sheet-toggle-btn active" data-sheet="auto" id="btn-sheet-auto">Auto (Best)</button>
+                    <button type="button" class="sheet-toggle-btn" data-sheet="12×18" id="btn-sheet-1218">12×18</button>
+                    <button type="button" class="sheet-toggle-btn" data-sheet="13×19" id="btn-sheet-1319">13×19</button>
+                    <button type="button" class="sheet-toggle-btn" data-sheet="25×36" id="btn-sheet-2536">25×36 Full</button>
+                    <button type="button" class="sheet-toggle-btn" data-sheet="26×38" id="btn-sheet-2638">26×38 Full</button>
+                  </div>
+                </div>
+                <div class="visualizer-header">
+                  <span id="visualizer-info-badge">Calculating 2D layout...</span>
+                  <span id="visualizer-yield-badge" style="color: #006400;">0 pcs / sheet</span>
+                </div>
+                <div class="sheet-svg-wrapper" id="sheet-svg-wrapper">
+                  <!-- Injected SVG -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Printing & Lamination Options -->
+          <div class="content-card">
+            <div class="card-title-row">
+              <span class="card-title">2. Printing & Finishing</span>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Printing Sides</label>
+                <div class="segmented-control">
+                  <div class="segmented-option">
+                    <input type="radio" name="std-print" id="std-pr-s" value="s" checked>
+                    <label for="std-pr-s" class="segmented-label">Single Side</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="std-print" id="std-pr-d" value="d">
+                    <label for="std-pr-d" class="segmented-label">Double Side</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Thermal / Cold Lamination</label>
+                <div class="segmented-control">
+                  <div class="segmented-option">
+                    <input type="radio" name="std-lam" id="std-lm-n" value="n" checked>
+                    <label for="std-lm-n" class="segmented-label">None</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="std-lam" id="std-lm-s" value="s">
+                    <label for="std-lm-s" class="segmented-label">Single Side</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="std-lam" id="std-lm-d" value="d">
+                    <label for="std-lm-d" class="segmented-label">Double Side</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Post-press Cutting & Other Charges -->
+            <div class="form-grid-2" style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-surface-soft);">
+              <div class="form-group">
+                <label class="form-label" for="std-cutting">Cutting Charge (₹)</label>
+                <input type="number" id="std-cutting" class="text-input" placeholder="0.00" value="0">
+                <div class="segmented-control" style="margin-top: 6px;">
+                  <div class="segmented-option">
+                    <input type="radio" name="std-cut-type" id="std-cm-t" value="t" checked>
+                    <label for="std-cm-t" class="segmented-label">Total Job</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="std-cut-type" id="std-cm-p" value="p">
+                    <label for="std-cm-p" class="segmented-label">Per Piece</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="std-other">Other Miscellaneous Charge (₹)</label>
+                <input type="number" id="std-other" class="text-input" placeholder="0.00" value="0">
+                <div class="segmented-control" style="margin-top: 6px;">
+                  <div class="segmented-option">
+                    <input type="radio" name="std-oth-type" id="std-om-t" value="t" checked>
+                    <label for="std-om-t" class="segmented-label">Total Job</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="std-oth-type" id="std-om-p" value="p">
+                    <label for="std-om-p" class="segmented-label">Per Piece</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Additional Post-Press & Finishing Services from Admin -->
+            <div id="std-custom-services-section" style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-surface-soft);">
+              <label class="form-label" style="margin-bottom: 8px;">Additional Post-Press & Finishing Services</label>
+              <div id="std-custom-services-list" class="custom-services-grid">
+                <!-- Injected via app.js -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- MODE 2: MULTI-PAGE BROCHURE / BOOKLET      -->
+        <!-- ========================================== -->
+        <div id="brochure-mode-section" style="display: none;">
+          <div class="content-card">
+            <div class="card-title-row">
+              <span class="card-title">1. Booklet Specifications</span>
+              <span class="card-subtitle">Separate Cover & Inner page configurations</span>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="bro-qty">Quantity of Books</label>
+                <input type="number" id="bro-qty" class="text-input" value="100" min="1" step="1">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="bro-pages">Total Pages (Incl. Cover)</label>
+                <input type="number" id="bro-pages" class="text-input" value="16" min="4" step="4">
+                <span class="form-sublabel">Must be multiple of 4 (e.g. 8, 12, 16, 24)</span>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="bro-size-trigger">Finished Booklet / Brochure Size</label>
+                <div class="custom-select-wrapper" id="custom-bro-size-wrapper">
+                  <div class="custom-select-trigger" id="bro-size-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="custom-select-trigger-text" id="bro-size-trigger-text">A4 Booklet (Closed 8.3×11.7")</span>
+                    <svg class="custom-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                  <div class="custom-dropdown-panel" id="bro-size-panel" style="display: none;" role="listbox"></div>
+                  <select id="bro-size" class="select-input" style="display: none;">
+                    <option value="a4" selected>A4 Booklet (Closed 8.3×11.7")</option>
+                    <option value="a5">A5 Booklet (Closed 5.8×8.3")</option>
+                    <option value="a4_2fold">A4 2-Fold / Tri-Fold (Open 25×11.7" — Uses 26×38 Paper)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div id="brochure-sheet-breakdown-note" class="cream-callout" style="margin-top: 10px;">
+              📘 <b>16 Pages (A4)</b> = Cover: 1 sheet (300 GSM) + Inner: 3 sheets (130 GSM). Total 4 parent sheets per book.
+            </div>
+          </div>
+
+          <!-- Cover Specifications Card -->
+          <div class="content-card">
+            <div class="card-title-row">
+              <span class="card-title">2. Cover Page Specifications (4 Pages)</span>
+              <span class="card-subtitle">Typically 250–350 GSM Art Card</span>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="bro-cover-substrate-trigger">Cover Paper / Card</label>
+                <div class="custom-select-wrapper" id="custom-bro-cover-wrapper">
+                  <div class="custom-select-trigger" id="bro-cover-substrate-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="custom-select-trigger-text" id="bro-cover-substrate-trigger-text">Select Cover Paper / Card...</span>
+                    <svg class="custom-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                  <div class="custom-dropdown-panel" id="bro-cover-substrate-panel" style="display: none;" role="listbox"></div>
+                  <select id="bro-cover-substrate" class="select-input" style="display: none;"></select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Cover Lamination</label>
+                <div class="segmented-control">
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-cov-lam" id="bro-cl-n" value="n">
+                    <label for="bro-cl-n" class="segmented-label">None</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-cov-lam" id="bro-cl-s" value="s" checked>
+                    <label for="bro-cl-s" class="segmented-label">Single (Outer)</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-cov-lam" id="bro-cl-d" value="d">
+                    <label for="bro-cl-d" class="segmented-label">Double</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Cover Printing</label>
+              <div class="segmented-control">
+                <div class="segmented-option">
+                  <input type="radio" name="bro-cov-print" id="bro-cp-d" value="d" checked>
+                  <label for="bro-cp-d" class="segmented-label">Double Sided (Outer + Inner)</label>
+                </div>
+                <div class="segmented-option">
+                  <input type="radio" name="bro-cov-print" id="bro-cp-s" value="s">
+                  <label for="bro-cp-s" class="segmented-label">Single Sided (Outer Only)</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inner Pages Specifications Card -->
+          <div class="content-card">
+            <div class="card-title-row">
+              <span class="card-title">3. Inner Pages Specifications</span>
+              <span class="card-subtitle">Typically 100–170 GSM Art Paper</span>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label" for="bro-inner-substrate-trigger">Inner Pages Paper</label>
+                <div class="custom-select-wrapper" id="custom-bro-inner-wrapper">
+                  <div class="custom-select-trigger" id="bro-inner-substrate-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="custom-select-trigger-text" id="bro-inner-substrate-trigger-text">Select Inner Pages Paper...</span>
+                    <svg class="custom-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                  <div class="custom-dropdown-panel" id="bro-inner-substrate-panel" style="display: none;" role="listbox"></div>
+                  <select id="bro-inner-substrate" class="select-input" style="display: none;"></select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Inner Printing</label>
+                <div class="segmented-control">
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-in-print" id="bro-ip-d" value="d" checked>
+                    <label for="bro-ip-d" class="segmented-label">Double Sided</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-in-print" id="bro-ip-s" value="s">
+                    <label for="bro-ip-s" class="segmented-label">Single Sided</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Binding & Post-press Card -->
+          <div class="content-card">
+            <div class="card-title-row">
+              <span class="card-title">4. Binding & Post-Press</span>
+            </div>
+
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label class="form-label" for="bro-binding-trigger">Binding Method</label>
+                <div class="custom-select-wrapper" id="custom-bro-binding-wrapper">
+                  <div class="custom-select-trigger" id="bro-binding-trigger" tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+                    <span class="custom-select-trigger-text" id="bro-binding-trigger-text">Select Binding Method...</span>
+                    <svg class="custom-select-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </div>
+                  <div class="custom-dropdown-panel" id="bro-binding-panel" style="display: none;" role="listbox"></div>
+                  <select id="bro-binding" class="select-input" style="display: none;">
+                    <option value="saddle" selected>Saddle Stitch (Center Pin Staple)</option>
+                    <option value="perfect">Perfect Binding (Hot Melt Glue)</option>
+                    <option value="wiro">Wiro / Spiral Binding</option>
+                    <option value="none">No Binding (Loose Fold)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="bro-cutting">Trimming / Cutting (₹)</label>
+                <input type="number" id="bro-cutting" class="text-input" placeholder="0.00" value="0">
+                <div class="segmented-control" style="margin-top: 6px;">
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-cut-type" id="bro-cm-t" value="t" checked>
+                    <label for="bro-cm-t" class="segmented-label">Total Job</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-cut-type" id="bro-cm-p" value="p">
+                    <label for="bro-cm-p" class="segmented-label">Per Book</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="bro-other">Other Charges (₹)</label>
+                <input type="number" id="bro-other" class="text-input" placeholder="0.00" value="0">
+                <div class="segmented-control" style="margin-top: 6px;">
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-oth-type" id="bro-om-t" value="t" checked>
+                    <label for="bro-om-t" class="segmented-label">Total Job</label>
+                  </div>
+                  <div class="segmented-option">
+                    <input type="radio" name="bro-oth-type" id="bro-om-p" value="p">
+                    <label for="bro-om-p" class="segmented-label">Per Book</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Additional Post-Press & Finishing Services from Admin -->
+            <div id="bro-custom-services-section" style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--color-surface-soft);">
+              <label class="form-label" style="margin-bottom: 8px;">Additional Post-Press & Finishing Services</label>
+              <div id="bro-custom-services-list" class="custom-services-grid">
+                <!-- Injected via app.js -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Sticky Live Quotation Card & Owner Inspector -->
+      <div class="quote-column">
+        <div class="quote-sticky-panel">
+
+          <!-- High-Voltage Quotation Card (Surface Dark per Airtable spec) -->
+          <div class="signature-quote-card">
+            <span class="quote-header-tag">Instant Commercial Quotation</span>
+            <span id="active-slab-tag" class="slab-badge">Standard Pricing</span>
+
+            <div class="quote-per-unit">
+              <div id="quote-unit-price" class="quote-unit-price">₹ 0.00</div>
+              <div class="quote-unit-label">Rate per Piece / Book (Incl. GST)</div>
+            </div>
+
+            <hr class="quote-divider">
+
+            <div class="quote-totals-list">
+              <div class="quote-total-row">
+                <span>Total Quantity</span>
+                <b id="quote-qty-label">500 Pcs</b>
+              </div>
+              <div class="quote-total-row" id="quote-sheets-row">
+                <span>Machine Sheets</span>
+                <b id="quote-sheets-label">250 Sheets (12×18)</b>
+              </div>
+              <div class="quote-total-row">
+                <span>Subtotal (Excl. GST)</span>
+                <b id="quote-total-pre">₹ 0.00</b>
+              </div>
+              <div class="quote-total-row">
+                <span>GST (18%)</span>
+                <b id="quote-gst-amt">₹ 0.00</b>
+              </div>
+              <div class="quote-total-row highlight">
+                <span>Final Order Total</span>
+                <b id="quote-total-final">₹ 0.00</b>
+              </div>
+            </div>
+
+            <div class="quote-actions-group">
+              <button id="btn-copy-quote" class="btn btn-whatsapp">
+                💬 Copy WhatsApp Quotation
+              </button>
+            </div>
+          </div>
+
+          <!-- Owner Profit & Cost Inspector (Visible when unlocked via PIN) -->
+          <div id="owner-breakdown-card" class="owner-card" style="display: none;">
+            <div id="owner-card-header" class="owner-card-header">
+              <span style="font-weight: 600; color: var(--color-ink); display: flex; align-items: center; gap: 6px;">
+                📊 Owner Cost Inspector
+              </span>
+              <span class="owner-badge">Unlocked</span>
+            </div>
+            <div id="owner-breakdown-table" class="breakdown-table">
+              <!-- Rendered via app.js -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Mobile Sticky Floating Bar -->
+  <div class="mobile-sticky-bar">
+    <div class="mobile-price-preview">
+      <div id="mobile-unit-price" class="mobile-price-val">₹ 0.00</div>
+      <span class="mobile-price-sub">Total: <span id="mobile-total-price">₹ 0.00</span></span>
+    </div>
+    <button onclick="document.getElementById('btn-copy-quote').click()" class="btn btn-primary btn-sm">
+      Copy Quote
+    </button>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- ADMIN PANEL MODAL (PIN-PROTECTED)          -->
+  <!-- ========================================== -->
+  <div id="admin-modal-overlay" class="modal-overlay">
+    <div class="admin-modal">
+      <div class="admin-modal-header">
+        <div>
+          <h2 style="font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--color-ink);">
+            Master Rate Admin Panel
+          </h2>
+          <p style="font-size: 12px; color: var(--color-muted);">
+            Feed rates once. Auto-propagates to all sales staff and calculations.
+          </p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="btn-modal-logout" class="btn btn-secondary btn-sm" style="border-color: #fca5a5; color: #dc2626; padding: 6px 12px; font-weight: 500;" title="Lock Admin Session">
+            🔒 Log Out
+          </button>
+          <button id="btn-close-admin-modal" class="btn btn-secondary btn-icon" title="Close">✕</button>
+        </div>
+      </div>
+
+      <div class="admin-modal-body">
+
+        <!-- SECTION 1: MASTER SUBSTRATES TABLE WITH 2 DEDICATED BOXES -->
+        <div class="admin-section">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div>
+              <div class="admin-section-title">1. Master Substrates & Papers Catalog</div>
+              <div class="admin-section-desc">Each row has two dedicated boxes: <b>[Sheet Cost]</b> and <b>[Print Impression Cost (Single / Double)]</b></div>
+            </div>
+            <button id="btn-admin-add-substrate" class="btn btn-primary btn-sm">+ Add New Paper / Vinyl</button>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Media / Substrate Name</th>
+                  <th style="width: 140px;">Sheet Cost (₹)</th>
+                  <th style="width: 200px;">Print Click Cost (₹ Single / Double)</th>
+                  <th style="width: 45px; text-align: center;"></th>
+                </tr>
+              </thead>
+              <tbody id="admin-substrate-tbody">
+                <!-- Injected via app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION 2: FINISHING, BINDING & POST-PRESS CHARGES -->
+        <div class="admin-section">
+          <div class="admin-section-title">2. Standard Lamination & Minimum Order</div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Lamination Single Side (₹/sheet)</label>
+              <input type="number" step="0.1" id="adm-lam-s" class="text-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Lamination Double Side (₹/sheet)</label>
+              <input type="number" step="0.1" id="adm-lam-d" class="text-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Min. Order Charge (₹)</label>
+              <input type="number" step="1" id="adm-min-charge" class="text-input">
+            </div>
+          </div>
+
+          <!-- Dynamic Binding Methods Table -->
+          <div style="margin-top: 14px; border-top: 1px solid var(--color-hairline); padding-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div>
+                <span style="font-size: 13px; font-weight: 600; color: var(--color-ink);">Booklet Binding Methods & Rates (₹/book)</span>
+                <span style="font-size: 11px; color: var(--color-muted); display: block;">Edit names (e.g. "Perfect Binding") or add custom binding options</span>
+              </div>
+              <button type="button" id="btn-add-binding-method" class="btn btn-secondary btn-sm">+ Add Binding Method</button>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Binding Method Name</th>
+                    <th style="width: 160px;">Rate (₹ / book)</th>
+                    <th style="width: 45px; text-align: center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="admin-binding-tbody">
+                  <!-- Injected via app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Dynamic Custom Finishing Services Table -->
+          <div style="margin-top: 14px; border-top: 1px solid var(--color-hairline); padding-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div>
+                <span style="font-size: 13px; font-weight: 600; color: var(--color-ink);">Additional Post-Press & Finishing Services</span>
+                <span style="font-size: 11px; color: var(--color-muted); display: block;">Services appear as checkboxes on the calculator for selection</span>
+              </div>
+              <button type="button" id="btn-add-custom-charge" class="btn btn-secondary btn-sm">+ Add Post-Press Service</button>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Service / Finishing Name</th>
+                    <th style="width: 140px;">Rate (₹)</th>
+                    <th style="width: 140px;">Unit</th>
+                    <th style="width: 45px; text-align: center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="admin-custom-charges-tbody">
+                  <!-- Injected via app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: DEFAULT MARGINS, WASTAGE & SLABS -->
+        <div class="admin-section">
+          <div class="admin-section-title">3. Business Rules & Slabs</div>
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Wastage %</label>
+              <input type="number" step="0.1" id="adm-wastage" class="text-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Base Margin %</label>
+              <input type="number" step="0.1" id="adm-margin" class="text-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">GST %</label>
+              <input type="number" step="0.1" id="adm-gst" class="text-input">
+            </div>
+          </div>
+
+          <div style="margin-top: 10px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; cursor: pointer;">
+              <input type="checkbox" id="adm-use-slabs">
+              Enable Auto Quantity Slabs (Automatically applies short-run surcharge for small jobs and bulk discounts for wholesale)
+            </label>
+            <div style="font-size: 11.5px; color: #64748b; margin-top: 4px; margin-left: 26px; line-height: 1.4;">
+              💡 <b>How Slabs Work:</b> Small Retail (11–50 sheets) adds +₹1.00/click for machine setup. Uncheck this box or set Print Adjust to 0 if you want flat base rates regardless of run length.
+            </div>
+          </div>
+
+          <!-- Quantity Slabs Management Table -->
+          <div style="margin-top: 14px; border-top: 1px solid var(--color-hairline); padding-top: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span style="font-size: 13px; font-weight: 600; color: var(--color-ink);">Manage Quantity Slabs & Volume Rates</span>
+              <button type="button" id="btn-add-slab-row" class="btn btn-secondary btn-sm">+ Add Slab Tier</button>
+            </div>
+            <div style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Slab Tier Name</th>
+                    <th style="width: 100px; text-align: center;">Min Sheets</th>
+                    <th style="width: 110px; text-align: center;">Max Sheets</th>
+                    <th style="width: 130px;">Print Adjust (₹)</th>
+                    <th style="width: 125px;">Margin Adjust (%)</th>
+                    <th style="width: 45px; text-align: center;"></th>
+                  </tr>
+                </thead>
+                <tbody id="admin-slabs-tbody">
+                  <!-- Injected via app.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 5: PIN & DATA BACKUP -->
+        <div class="admin-section">
+          <div class="admin-section-title">5. Security PIN & Cloud Sync Backup</div>
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Change Owner PIN (Minimum 4 digits)</label>
+              <input type="password" id="adm-new-pin" class="text-input" placeholder="Enter new PIN">
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end; gap: 8px;">
+              <button id="btn-export-backup" class="btn btn-secondary" style="flex: 1;">
+                📥 Export Backup (JSON)
+              </button>
+              <button id="btn-import-backup" class="btn btn-secondary" style="flex: 1;">
+                📤 Restore Backup
+              </button>
+              <input type="file" id="file-import-backup" accept=".json" style="display: none;">
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: right; margin-top: var(--space-md);">
+          <button id="btn-save-admin-settings" class="btn btn-primary" style="padding: 14px 28px;">
+            Save All Admin Settings ✓
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PIN Entry Modal (Custom in-page modal, replaces native prompt) -->
+  <div id="pin-modal-overlay" class="modal-overlay">
+    <div class="content-card" style="max-width: 380px; width: 100%; text-align: center; padding: var(--space-xl); background: var(--color-canvas); box-shadow: 0 20px 40px rgba(0,0,0,0.25); border-radius: var(--radius-lg);">
+      <div style="font-size: 36px; margin-bottom: 8px;">🔒</div>
+      <h3 style="font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--color-ink); margin-bottom: 6px;">
+        Owner Admin Access
+      </h3>
+      <p style="font-size: 12px; color: var(--color-muted); margin-bottom: var(--space-md);">
+        Enter your 4-digit PIN to access admin panel.
+      </p>
+      <input type="password" id="pin-modal-input" class="text-input" placeholder="••••" style="text-align: center; font-size: 22px; letter-spacing: 6px; height: 50px; margin-bottom: var(--space-sm);" maxlength="10">
+      <div id="pin-error-msg" style="color: #aa2d00; font-size: 12px; height: 18px; margin-bottom: 8px;"></div>
+      <div style="display: flex; gap: 8px;">
+        <button id="btn-pin-cancel" class="btn btn-secondary" style="flex: 1;">Cancel</button>
+        <button id="btn-pin-submit" class="btn btn-primary" style="flex: 1;">Unlock</button>
+      </div>
+      <div style="height: 12px;"></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast-notification" class="toast-notice"></div>
+
+  <script src="app.js?v=3.0"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8"><title>रेट कैलकुलेटर</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--tx:#1d1d1b;--mu:#6b6b66;--ac:#b4361f;--bd:#ddd8cc;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--card:#232321;--tx:#f0eee8;--mu:#a09e96;--ac:#ef7a62;--bd:#3a3935}}
+:root[data-theme="dark"]{--bg:#171716;--card:#232321;--tx:#f0eee8;--mu:#a09e96;--ac:#ef7a62;--bd:#3a3935}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Noto Sans Devanagari",sans-serif}
+.w{max-width:480px;margin:0 auto;padding:20px 16px}
+h1{font-size:20px;margin:0}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:14px}
+label.l{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}.c>label.l:first-child{margin-top:0}
+input[type=number],input[type=text],select,textarea{width:100%;box-sizing:border-box;font-size:17px;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font-family:inherit}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch}
+.seg{display:flex;gap:8px}.seg label{flex:1;text-align:center;padding:10px 4px;border:1px solid var(--bd);border-radius:8px;font-size:15px;cursor:pointer}
+.seg input{display:none}.seg label:has(input:checked){background:var(--ac);color:#fff;border-color:var(--ac)}
+.r{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--bd);font-size:15px}.r:last-child{border:0}
+.big{background:var(--ac);color:#fff;border-radius:12px;padding:14px 8px;text-align:center}
+.big b{display:block;font-size:24px;margin-top:4px}.big span{font-size:13px;opacity:.92}
+.big.t{background:var(--card);color:var(--tx);border:2px solid var(--ac)}
+button{font-size:14px;padding:8px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.hide{display:none}.note{font-size:12px;color:var(--mu)}
+.pr{display:grid;grid-template-columns:1fr 84px 40px;gap:6px;margin-top:8px}.pr input{padding:8px;font-size:15px}
+textarea{font-size:12px;height:90px;margin-top:8px}
+</style></head><body><div class="w">
+<div class="top"><h1>रेट कैलकुलेटर</h1><button id="lk">🔒 Owner</button></div>
+
+<div class="c">
+<label class="l">पेपर चुनिए</label><select id="ps"></select>
+<label class="l">क्वांटिटी (पीस / बुक)</label><input id="q" type="number" inputmode="decimal" value="1000">
+<label class="l">कुल पेज (बुक हो तो, नहीं तो खाली छोड़ें)</label><input id="pg" type="number" inputmode="numeric" placeholder="जैसे 40">
+<div id="lv" class="note" style="margin-top:6px"></div>
+<label class="l">प्रिंटिंग</label>
+<div class="seg"><label><input type="radio" name="pr" value="s" checked>सिंगल साइड</label><label><input type="radio" name="pr" value="d">डबल साइड</label></div>
+<label class="l">लेमिनेशन</label>
+<div class="seg"><label><input type="radio" name="lm" value="n" checked>नहीं</label><label><input type="radio" name="lm" value="s">सिंगल</label><label><input type="radio" name="lm" value="d">डबल</label></div>
+<div id="lsw" class="hide"><label class="l">लेमिनेशन कितने पेज (पत्तों) पर</label>
+<div class="seg"><label><input type="radio" name="lc" value="a" checked>सब पर</label><label><input type="radio" name="lc" value="n">कितने पेज पर</label></div>
+<input id="ln" type="number" inputmode="numeric" placeholder="कितने पेज/पत्तों पर लिखें (जैसे 1 या 2)" class="hide" style="margin-top:8px"></div>
+<label class="l">कटिंग चार्ज (₹, नहीं तो खाली छोड़ें)</label><input id="ct" type="number" inputmode="decimal" placeholder="0">
+<div class="seg" style="margin-top:8px"><label><input type="radio" name="cm" value="p" checked>प्रति पीस</label><label><input type="radio" name="cm" value="t">टोटल</label></div>
+<label class="l">अदर चार्ज (₹, कोई हो तो लिखें)</label><input id="oc" type="number" inputmode="decimal" placeholder="0">
+<div class="seg" style="margin-top:8px"><label><input type="radio" name="om" value="p" checked>प्रति पीस</label><label><input type="radio" name="om" value="t">टोटल</label></div>
+</div>
+
+<div id="own" class="hide">
+<div class="c"><b>पेपर लिस्ट</b> <span class="note">· नाम (साइज़ + GSM) और रेट ₹ प्रति पीस</span>
+<div id="pl"></div>
+<button id="ap" style="margin-top:12px">+ नया पेपर जोड़ें</button></div>
+<div class="c"><b>बाकी रेट</b> <span class="note">· सब ₹ प्रति पीस</span>
+<div class="g"><div><label class="l">फर्मा सिंगल (₹)</label><input id="fs" type="number" inputmode="decimal"></div>
+<div><label class="l">फर्मा डबल (₹)</label><input id="fd" type="number" inputmode="decimal"></div>
+<div><label class="l">लेमिनेशन सिंगल (₹)</label><input id="ls" type="number" inputmode="decimal"></div>
+<div><label class="l">लेमिनेशन डबल (₹)</label><input id="ld" type="number" inputmode="decimal"></div>
+<div><label class="l">फिक्स अदर (₹, हमेशा लगेगा)</label><input id="o" type="number" inputmode="decimal"></div>
+<div><label class="l">वेस्टेज %</label><input id="w" type="number" inputmode="decimal"></div>
+<div><label class="l">मार्जिन %</label><input id="m" type="number" inputmode="decimal"></div>
+<div><label class="l">GST %</label><input id="t" type="number" inputmode="decimal"></div></div>
+<p class="note">ये सब सिर्फ इसी फ़ोन में सेव होता है।</p></div>
+<div class="c"><b>स्टाफ के फ़ोन के लिए</b>
+<p class="note">नीचे का बटन दबाकर कॉपी करें और Claude को भेज दें, वह इसे फ़ाइल में पक्का कर देगा।</p>
+<button id="cp">सेटिंग कॉपी करें</button> <span id="cm2" class="note"></span>
+<textarea id="ex" readonly class="hide"></textarea></div>
+<div class="c"><b>Owner PIN बदलें</b>
+<label class="l">नया PIN (कम से कम 4 अंक)</label><input id="np" type="number" inputmode="numeric" placeholder="नया PIN">
+<button id="sp" style="margin-top:10px">PIN सेव करें</button> <span id="pm" class="note"></span></div>
+<div class="c" id="d"></div></div>
+
+<div class="g">
+<div class="big t"><span>GST से पहले रेट (प्रति पीस / बुक)</span><b id="pf">₹0</b></div>
+<div class="big"><span>GST सहित रेट (प्रति पीस / बुक)</span><b id="fin">₹0</b></div>
+<div class="big t"><span id="pq">टोटल (GST से पहले)</span><b id="ptot">₹0</b></div>
+<div class="big"><span id="fq">टोटल (GST सहित)</span><b id="tot">₹0</b></div>
+</div>
+</div>
+<script>
+/* ===== फिक्स वैल्यू (staff को ये नहीं दिखतीं) — सब प्रति पीस; नीचे के रेट सिर्फ नमूने हैं ===== */
+const PIN="1234";
+const FIX={fs:2.6,fd:4.5,ls:1.5,ld:3,o:0,w:5,m:25,t:18};
+const PAPERS=[
+{n:"12×18 – 130 GSM",r:1.5},{n:"12×18 – 170 GSM",r:2},{n:"12×18 – 250 GSM",r:3},{n:"12×18 – 300 GSM",r:3.6},{n:"12×18 – 350 GSM",r:4.2},
+{n:"13×19 – 130 GSM",r:1.8},{n:"13×19 – 170 GSM",r:2.4},{n:"13×19 – 250 GSM",r:3.5},{n:"13×19 – 300 GSM",r:4.2},
+{n:"18×23 – 130 GSM",r:3},{n:"18×23 – 170 GSM",r:4},{n:"18×23 – 250 GSM",r:6},{n:"18×23 – 300 GSM",r:7.2},
+{n:"20×30 – 130 GSM",r:5},{n:"20×30 – 170 GSM",r:6.5},{n:"23×36 – 130 GSM",r:7},{n:"23×36 – 300 GSM",r:15}];
+/* ===================================================================================== */
+const $=i=>document.getElementById(i),ids=Object.keys(FIX);
+const fmt=n=>"₹"+n.toLocaleString("en-IN",{maximumFractionDigits:2});
+const rv=n=>document.querySelector('input[name="'+n+'"]:checked').value;
+let S={...FIX},P=PAPERS.map(x=>({...x}));
+try{const s=JSON.parse(localStorage.getItem("rcS4")||"null");if(s)S={...FIX,...s}}catch(e){}
+try{const p=JSON.parse(localStorage.getItem("rcP4")||"null");if(Array.isArray(p)&&p.length)P=p}catch(e){}
+ids.forEach(i=>$(i).value=S[i]);
+const owner=()=>!$("own").classList.contains("hide");
+function save(){try{localStorage.setItem("rcS4",JSON.stringify(S));localStorage.setItem("rcP4",JSON.stringify(P))}catch(e){}}
+function fillSel(){const cur=$("ps").value;
+$("ps").innerHTML=P.map((x,i)=>`<option value="${i}">${(x.n||"(नाम नहीं)").replace(/</g,"&lt;")}</option>`).join("");
+$("ps").value=P[cur]?cur:0}
+function fillList(){$("pl").innerHTML=P.map((x,i)=>`<div class="pr"><input type="text" data-i="${i}" data-k="n" value="${(x.n||"").replace(/"/g,"&quot;")}" placeholder="12×18 – 300 GSM"><input type="number" inputmode="decimal" data-i="${i}" data-k="r" value="${x.r}"><button data-del="${i}">✕</button></div>`).join("")}
+$("pl").addEventListener("input",e=>{const t=e.target,i=+t.dataset.i;if(isNaN(i))return;
+P[i][t.dataset.k]=t.dataset.k==="r"?(parseFloat(t.value)||0):t.value;save();fillSel();calc()});
+$("pl").addEventListener("click",e=>{const i=e.target.dataset.del;if(i==null||P.length<2)return;
+P.splice(+i,1);save();fillList();fillSel();calc()});
+$("ap").onclick=()=>{P.push({n:"",r:0});save();fillList();fillSel();calc()};
+function calc(){
+if(owner()){ids.forEach(i=>S[i]=parseFloat($(i).value)||0);save()}
+const q=parseFloat($("q").value)||0,paper=(P[+$("ps").value]||{r:0}).r,pages=parseFloat($("pg").value)||0;
+const prt=rv("pr")==="d"?S.fd:S.fs,leaves=pages>0?Math.ceil(pages/(rv("pr")==="d"?2:1)):1;
+$("lv").textContent=pages>0?pages+" पेज, "+(rv("pr")==="d"?"डबल":"सिंगल")+" साइड = "+leaves+" पत्ते (पेपर) प्रति बुक":"";
+const lamRate=rv("lm")==="s"?S.ls:rv("lm")==="d"?S.ld:0;
+$("lsw").classList.toggle("hide",rv("lm")==="n");
+$("ln").classList.toggle("hide",rv("lc")==="a");
+const lc=rv("lc"),lamN=lc==="a"?leaves:Math.min(parseFloat($("ln").value)||0,leaves),lam=lamRate*lamN;
+const cut=(parseFloat($("ct").value)||0)/(rv("cm")==="t"?(q||1):1);
+const oth=(parseFloat($("oc").value)||0)/(rv("om")==="t"?(q||1):1);
+const base=(paper+prt)*leaves,wst=base*S.w/100,cost=base+wst+lam+cut+oth+S.o,mar=cost*S.m/100,pre=cost+mar,gst=pre*S.t/100,fin=pre+gst;
+const rows=[["पेपर प्रति पत्ता",paper],["प्रिंटिंग प्रति पत्ता",prt],["पत्ते (शीट/लीफ)",leaves,1],["पेपर + प्रिंटिंग",base],["वेस्टेज",wst],["लेमिनेशन ("+lamN+" पत्ते)",lam],["कटिंग",cut],["अदर चार्ज (स्टाफ)",oth],["फिक्स अदर",S.o],["कुल लागत",cost],["मार्जिन",mar],["GST से पहले रेट",pre],["GST",gst]];
+$("d").innerHTML=rows.map(r=>`<div class="r"><span>${r[0]}</span><b>${r[2]?r[1]:fmt(r[1])}</b></div>`).join("");
+$("fin").textContent=fmt(fin);$("tot").textContent=fmt(fin*q);
+$("pf").textContent=fmt(pre);$("ptot").textContent=fmt(pre*q);
+$("pq").textContent=q+" नग टोटल (GST से पहले)";$("fq").textContent=q+" नग टोटल (GST सहित)";
+}
+$("lk").onclick=()=>{const o=$("own");
+if(owner()){o.classList.add("hide");$("lk").textContent="🔒 Owner";return}
+let cp=PIN;try{cp=localStorage.getItem("rcPin")||PIN}catch(e){}
+if(prompt("Owner PIN डालिए")===cp){o.classList.remove("hide");$("lk").textContent="Owner बंद करें";fillList()}};
+$("sp").onclick=()=>{const v=$("np").value.trim();
+if(v.length<4){$("pm").textContent="कम से कम 4 अंक डालिए";return}
+try{localStorage.setItem("rcPin",v);$("np").value="";$("pm").textContent="PIN बदल गया ✓"}catch(e){$("pm").textContent="सेव नहीं हो पाया"}};
+$("cp").onclick=()=>{const t=JSON.stringify({S,P}),x=$("ex");x.value=t;x.classList.remove("hide");x.select();
+try{navigator.clipboard.writeText(t).then(()=>$("cm2").textContent="कॉपी हो गया ✓",()=>$("cm2").textContent="ऊपर का टेक्स्ट सेलेक्ट करके कॉपी करें")}catch(e){$("cm2").textContent="ऊपर का टेक्स्ट सेलेक्ट करके कॉपी करें"}};
+document.querySelectorAll(".c input:not([data-i]),.c select").forEach(e=>{e.addEventListener("input",calc);e.addEventListener("change",calc)});
+fillSel();calc();
+</script></body></html>

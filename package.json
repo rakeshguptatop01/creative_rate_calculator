@@ -1,0 +1,19 @@
+﻿{
+  "name": "creative-print-calculator",
+  "version": "1.0.0",
+  "description": "Commercial Print & Signage Pricing Calculator with AI Smart Entry",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "printing",
+    "calculator",
+    "commercial-print",
+    "digital-press",
+    "gemini-ai"
+  ],
+  "author": "Creative Prints",
+  "license": "ISC"
+}

@@ -1,0 +1,312 @@
+{
+  "settings": {
+    "pin": "1234",
+    "defaultPrintSingle": 2.6,
+    "defaultPrintDouble": 4.5,
+    "lamSingle": 1.5,
+    "lamDouble": 3,
+    "bindingSaddle": 1.5,
+    "bindingPerfect": 8,
+    "bindingWiro": 12,
+    "bindingMethods": [
+      {
+        "id": "saddle",
+        "name": "Saddle Stitch (Center Pin Staple)",
+        "rate": 1.5
+      },
+      {
+        "id": "perfect",
+        "name": "Perfect Binding",
+        "rate": 8
+      },
+      {
+        "id": "wiro",
+        "name": "Wiro / Spiral Binding",
+        "rate": 12
+      },
+      {
+        "id": "none",
+        "name": "No Binding (Loose Fold)",
+        "rate": 0
+      }
+    ],
+    "cuttingFixed": 0,
+    "fixedOther": 0,
+    "wastagePercent": 5,
+    "marginPercent": 25,
+    "gstPercent": 18,
+    "useSlabs": true,
+    "minOrderCharge": 50,
+    "customServices": [
+      {
+        "id": "srv_crease",
+        "name": "Creasing / Scoring",
+        "rate": 0.5,
+        "unit": "sheet"
+      },
+      {
+        "id": "srv_spotuv",
+        "name": "Spot UV Coating",
+        "rate": 3.5,
+        "unit": "sheet"
+      },
+      {
+        "id": "srv_foiling",
+        "name": "Gold / Silver Foiling",
+        "rate": 6,
+        "unit": "sheet"
+      },
+      {
+        "id": "srv_diepunch",
+        "name": "Die Punching",
+        "rate": 1,
+        "unit": "sheet"
+      },
+      {
+        "id": "srv_hardcover",
+        "name": "Hardcover Case Binding",
+        "rate": 45,
+        "unit": "book"
+      }
+    ]
+  },
+  "substrates": [
+    {
+      "id": "sub_1",
+      "name": "12×18 – Art Paper 130 GSM",
+      "size": "12×18",
+      "sheetCost": 1.5,
+      "printSingle": 2.6,
+      "printDouble": 4.5,
+      "category": "paper"
+    },
+    {
+      "id": "sub_2",
+      "name": "12×18 – Art Paper 170 GSM",
+      "size": "12×18",
+      "sheetCost": 2,
+      "printSingle": 2.6,
+      "printDouble": 4.5,
+      "category": "paper"
+    },
+    {
+      "id": "sub_3",
+      "name": "12×18 – Art Card 250 GSM",
+      "size": "12×18",
+      "sheetCost": 3,
+      "printSingle": 2.6,
+      "printDouble": 4.5,
+      "category": "paper"
+    },
+    {
+      "id": "sub_4",
+      "name": "12×18 – Art Card 300 GSM",
+      "size": "12×18",
+      "sheetCost": 3.6,
+      "printSingle": 2.6,
+      "printDouble": 4.5,
+      "category": "paper"
+    },
+    {
+      "id": "sub_5",
+      "name": "12×18 – Art Card 350 GSM",
+      "size": "12×18",
+      "sheetCost": 4.2,
+      "printSingle": 2.6,
+      "printDouble": 4.5,
+      "category": "paper"
+    },
+    {
+      "id": "sub_6",
+      "name": "13×19 – Art Paper 130 GSM",
+      "size": "13×19",
+      "sheetCost": 1.8,
+      "printSingle": 2.8,
+      "printDouble": 4.8,
+      "category": "paper"
+    },
+    {
+      "id": "sub_7",
+      "name": "13×19 – Art Paper 170 GSM",
+      "size": "13×19",
+      "sheetCost": 2.3,
+      "printSingle": 2.8,
+      "printDouble": 4.8,
+      "category": "paper"
+    },
+    {
+      "id": "sub_8",
+      "name": "13×19 – Art Card 250 GSM",
+      "size": "13×19",
+      "sheetCost": 3.4,
+      "printSingle": 2.8,
+      "printDouble": 4.8,
+      "category": "paper"
+    },
+    {
+      "id": "sub_9",
+      "name": "13×19 – Art Card 300 GSM",
+      "size": "13×19",
+      "sheetCost": 4.2,
+      "printSingle": 2.8,
+      "printDouble": 4.8,
+      "category": "paper"
+    },
+    {
+      "id": "sub_10",
+      "name": "13×19 – Art Card 350 GSM",
+      "size": "13×19",
+      "sheetCost": 5,
+      "printSingle": 2.8,
+      "printDouble": 4.8,
+      "category": "paper"
+    },
+    {
+      "id": "sub_11",
+      "name": "12×18 – SBS Paper 300 GSM",
+      "size": "12×18",
+      "sheetCost": 4.8,
+      "printSingle": 2.8,
+      "printDouble": 4.8,
+      "category": "paper"
+    },
+    {
+      "id": "sub_12",
+      "name": "12×18 – Normal Gumming Sheet",
+      "size": "12×18",
+      "sheetCost": 4.5,
+      "printSingle": 3.5,
+      "printDouble": 0,
+      "category": "sticker"
+    },
+    {
+      "id": "sub_13",
+      "name": "12×18 – AD Gumming Sheet",
+      "size": "12×18",
+      "sheetCost": 5.5,
+      "printSingle": 3.5,
+      "printDouble": 0,
+      "category": "sticker"
+    },
+    {
+      "id": "sub_14",
+      "name": "13×19 – AD Gumming Sheet",
+      "size": "13×19",
+      "sheetCost": 6.5,
+      "printSingle": 3.8,
+      "printDouble": 0,
+      "category": "sticker"
+    },
+    {
+      "id": "sub_15",
+      "name": "13×19 – White Vinyl Sticker",
+      "size": "13×19",
+      "sheetCost": 12,
+      "printSingle": 4.5,
+      "printDouble": 0,
+      "category": "sticker"
+    },
+    {
+      "id": "sub_16",
+      "name": "13×19 – Clear Vinyl Sticker",
+      "size": "13×19",
+      "sheetCost": 14.5,
+      "printSingle": 5,
+      "printDouble": 0,
+      "category": "sticker"
+    },
+    {
+      "id": "sub_17",
+      "name": "12×18 – Golden Vinyl Sticker",
+      "size": "12×18",
+      "sheetCost": 16,
+      "printSingle": 5,
+      "printDouble": 0,
+      "category": "sticker"
+    },
+    {
+      "id": "sub_18",
+      "name": "12×18 – Silver / Metallic Vinyl Sticker",
+      "size": "12×18",
+      "sheetCost": 16,
+      "printSingle": 5,
+      "printDouble": 0,
+      "category": "sticker"
+    },
+    {
+      "id": "sub_19",
+      "name": "12×18 – Texture Paper 250 GSM",
+      "size": "12×18",
+      "sheetCost": 7.5,
+      "printSingle": 3.5,
+      "printDouble": 6,
+      "category": "specialty"
+    },
+    {
+      "id": "sub_20",
+      "name": "12×18 – Texture Paper 300 GSM",
+      "size": "12×18",
+      "sheetCost": 9,
+      "printSingle": 3.5,
+      "printDouble": 6,
+      "category": "specialty"
+    },
+    {
+      "id": "sub_21",
+      "name": "12×18 – Bond / Executive 100 GSM",
+      "size": "12×18",
+      "sheetCost": 1.8,
+      "printSingle": 2.6,
+      "printDouble": 4.5,
+      "category": "paper"
+    },
+    {
+      "id": "sub_22",
+      "name": "12×18 – NTR / Synthetic Non-Tearable",
+      "size": "12×18",
+      "sheetCost": 11,
+      "printSingle": 4.5,
+      "printDouble": 8,
+      "category": "specialty"
+    },
+    {
+      "id": "sub_23",
+      "name": "12×18 – Sunshine Super White",
+      "size": "12×18",
+      "sheetCost": 2.8,
+      "printSingle": 2.6,
+      "printDouble": 4.5,
+      "category": "paper"
+    }
+  ],
+  "slabs": [
+    {
+      "min": 1,
+      "max": 10,
+      "name": "Sample / Short-Run (1-10)",
+      "printAdjust": 3,
+      "marginAdjust": 15
+    },
+    {
+      "min": 11,
+      "max": 50,
+      "name": "Small Retail (11-50)",
+      "printAdjust": 1,
+      "marginAdjust": 5
+    },
+    {
+      "min": 51,
+      "max": 200,
+      "name": "Standard (51-200)",
+      "printAdjust": 0,
+      "marginAdjust": 0
+    },
+    {
+      "min": 201,
+      "max": 999999,
+      "name": "Bulk Wholesale (200+)",
+      "printAdjust": -0.5,
+      "marginAdjust": -7
+    }
+  ]
+}
